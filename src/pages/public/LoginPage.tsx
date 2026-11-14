@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Shield, User, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Shield, User, Lock, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../../app/store';
 import { DEMO_CREDENTIALS } from '../../core/fixtures/demoUser';
 import { Button } from '../../components/ui/button';
@@ -23,29 +23,26 @@ export function LoginPage() {
     setError('');
 
     setTimeout(() => {
+      const cleanUser = username.trim();
+      const cleanPass = password.trim();
+
       if (
-        username === DEMO_CREDENTIALS.customer.username &&
-        password === DEMO_CREDENTIALS.customer.password
+        cleanUser === DEMO_CREDENTIALS.customer.username &&
+        cleanPass === DEMO_CREDENTIALS.customer.password
       ) {
         loginAsDemo('customer');
         navigate('/app');
       } else if (
-        username === DEMO_CREDENTIALS.admin.username &&
-        password === DEMO_CREDENTIALS.admin.password
+        cleanUser === DEMO_CREDENTIALS.admin.username &&
+        cleanPass === DEMO_CREDENTIALS.admin.password
       ) {
         loginAsDemo('admin');
         navigate('/admin');
       } else {
-        // For convenience in demo, allow any non-empty input as demo customer
-        if (username.trim()) {
-          loginAsDemo('customer');
-          navigate('/app');
-        } else {
-          setError('Please enter a username and password.');
-          setIsLoading(false);
-        }
+        setError('Invalid username or password. Please use the demo credentials provided below.');
+        setIsLoading(false);
       }
-    }, 400);
+    }, 350);
   };
 
   const selectPersona = (role: 'customer' | 'admin') => {
@@ -66,7 +63,7 @@ export function LoginPage() {
           Demo Platform Sign In
         </h1>
         <p className="mt-2 text-xs text-slate-400">
-          Enter credentials or choose a pre-configured demo profile below.
+          Strictly validated demo accounts. Choose a pre-configured profile or type below.
         </p>
       </div>
 
@@ -75,7 +72,7 @@ export function LoginPage() {
           {/* Quick Profile Selectors */}
           <div className="mb-6 space-y-2">
             <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Select Demo Role
+              Select Demo Account (One-Click Fill)
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -83,7 +80,7 @@ export function LoginPage() {
                 onClick={() => selectPersona('customer')}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                   username === DEMO_CREDENTIALS.customer.username
-                    ? 'border-brand-primary/60 bg-brand-primary/10 text-white'
+                    ? 'border-brand-primary/60 bg-brand-primary/10 text-white shadow-sm'
                     : 'border-slate-800 bg-slate-900/50 text-slate-300 hover:border-slate-700'
                 }`}
               >
@@ -101,7 +98,7 @@ export function LoginPage() {
                 onClick={() => selectPersona('admin')}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                   username === DEMO_CREDENTIALS.admin.username
-                    ? 'border-brand-accent/60 bg-brand-accent/10 text-white'
+                    ? 'border-brand-accent/60 bg-brand-accent/10 text-white shadow-sm'
                     : 'border-slate-800 bg-slate-900/50 text-slate-300 hover:border-slate-700'
                 }`}
               >
@@ -124,7 +121,10 @@ export function LoginPage() {
                 <Input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (error) setError('');
+                  }}
                   className="pl-10 text-xs font-mono"
                   placeholder="demouser"
                   required
@@ -139,7 +139,10 @@ export function LoginPage() {
                 <Input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError('');
+                  }}
                   className="pl-10 text-xs font-mono"
                   placeholder="••••••••"
                   required
@@ -148,8 +151,12 @@ export function LoginPage() {
             </div>
 
             {error && (
-              <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
-                {error}
+              <div
+                role="alert"
+                className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2"
+              >
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <span>{error}</span>
               </div>
             )}
 
@@ -159,7 +166,7 @@ export function LoginPage() {
               className="w-full gap-2 text-xs font-bold py-5 rounded-xl mt-2"
             >
               {isLoading ? (
-                <span>Loading Session...</span>
+                <span>Validating Session...</span>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
@@ -173,7 +180,7 @@ export function LoginPage() {
           <div className="mt-6 pt-4 border-t border-slate-800 text-center">
             <span className="text-[11px] text-slate-500 flex items-center justify-center gap-1">
               <Shield className="w-3.5 h-3.5 text-slate-400" />
-              Simulated authentication. No actual user accounts or passwords are leaked.
+              Demo credential verification enforced.
             </span>
           </div>
         </CardContent>
