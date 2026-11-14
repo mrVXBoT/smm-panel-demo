@@ -3,28 +3,34 @@ import { db } from './database';
 import { walletRepository } from './walletRepository';
 import type { Order, LedgerEntry, Wallet } from '../types/models';
 
-export function useCustomerWallet(userId: string): Wallet {
-  const wallet = useLiveQuery(
-    async () => {
-      return walletRepository.getWallet(userId);
-    },
-    [userId],
-    {
-      id: `wal_${userId}`,
-      userId,
-      currency: 'USD' as const,
-      balanceCents: 8700,
-    },
-  );
+export interface CustomerWalletState {
+  id: string;
+  userId: string;
+  currency: 'USD';
+  balanceCents: number;
+  isLoading: boolean;
+  wallet: Wallet | null;
+  error: Error | null;
+}
 
-  return (
-    wallet ?? {
-      id: `wal_${userId}`,
-      userId,
-      currency: 'USD' as const,
-      balanceCents: 8700,
-    }
-  );
+export function useCustomerWallet(userId: string): CustomerWalletState {
+  const queryResult = useLiveQuery(async () => {
+    return walletRepository.getWallet(userId);
+  }, [userId]);
+
+  const isLoading = queryResult === undefined;
+  const wallet = queryResult ?? null;
+
+  return {
+    id: `wal_${userId}`,
+    userId,
+    currency: 'USD',
+    // Never present a fabricated balance: returns genuine ledger-derived balance when resolved, or 0 while loading
+    balanceCents: wallet ? wallet.balanceCents : 0,
+    isLoading,
+    wallet,
+    error: null,
+  };
 }
 
 export function useCustomerOrders(userId: string): Order[] {

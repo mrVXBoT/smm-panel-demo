@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { WalletPage } from './WalletPage';
 import { resetDemoSystem } from '../../core/db/reset';
@@ -9,14 +9,16 @@ describe('WalletPage Client Payment Flow', () => {
     await resetDemoSystem();
   });
 
-  it('renders initial demo customer balance of $87.00', () => {
+  it('renders initial demo customer balance of $87.00', async () => {
     render(
       <MemoryRouter>
         <WalletPage />
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('$87.00')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('$87.00')).toBeInTheDocument();
+    });
   });
 
   it('renders primary button reading strictly "Pay by Visa or Mastercard"', () => {

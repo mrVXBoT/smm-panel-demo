@@ -4,6 +4,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { PublicLayout } from '../components/layout/PublicLayout';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
 import { AdminLayout } from '../components/layout/AdminLayout';
+import { ProtectedRoute } from '../components/layout/ProtectedRoute';
 
 // Public pages
 import { HomePage } from '../pages/public/HomePage';
@@ -32,7 +33,7 @@ import { AdminPaymentsPage } from '../pages/admin/AdminPaymentsPage';
 import { AdminTicketsPage } from '../pages/admin/AdminTicketsPage';
 import { AdminSettingsPage } from '../pages/admin/AdminSettingsPage';
 
-export const router = createBrowserRouter([
+export const routesConfig = [
   // Public routes
   {
     path: '/',
@@ -45,10 +46,14 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Customer app routes
+  // Customer app routes (protected by authentication guard)
   {
     path: '/app',
-    element: <CustomerLayout />,
+    element: (
+      <ProtectedRoute>
+        <CustomerLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'order/new', element: <NewOrderPage /> },
@@ -63,10 +68,14 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Admin portal routes
+  // Admin portal routes (protected by admin authorization guard)
   {
     path: '/admin',
-    element: <AdminLayout />,
+    element: (
+      <ProtectedRoute requiredRole="admin">
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <AdminDashboardPage /> },
       { path: 'services', element: <AdminServicesPage /> },
@@ -83,4 +92,6 @@ export const router = createBrowserRouter([
     path: '*',
     element: <Navigate to="/" replace />,
   },
-]);
+];
+
+export const router = createBrowserRouter(routesConfig);

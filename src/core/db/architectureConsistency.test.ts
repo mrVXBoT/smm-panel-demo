@@ -37,18 +37,20 @@ describe('Architecture & Persistence Integration Gates', () => {
     expect(newOrder.id).toBeDefined();
     expect(newOrder.chargeCents).toBe(140);
     expect(newOrder.status).toBe('pending');
+    expect(newOrder.id).toMatch(/^ORD-[0-9a-f-]{36}$/);
 
     // Verify order table has new row
     const ordersAfter = await orderRepository.getByUserId(userId);
     expect(ordersAfter.length).toBe(initialOrders.length + 1);
     expect(ordersAfter[0]?.id).toBe(newOrder.id);
 
-    // Verify ledger has matching debit entry
+    // Verify ledger has matching debit entry with collision-resistant UUID
     const ledger = await walletRepository.getLedgerEntries(userId);
     const debitEntry = ledger.find((e) => e.orderId === newOrder.id);
     expect(debitEntry).toBeDefined();
     expect(debitEntry?.amountCents).toBe(-140);
     expect(debitEntry?.kind).toBe('order_charge');
+    expect(debitEntry?.id).toMatch(/^TXN-[0-9a-f-]{36}$/);
 
     // Verify derived balance reduced by exactly 140 cents
     const newBalance = await walletRepository.getBalanceCents(userId);
@@ -63,10 +65,10 @@ describe('Architecture & Persistence Integration Gates', () => {
     await expect(
       orderRepository.placeOrder({
         userId,
-        serviceId: 'srv_large_order',
+        serviceId: 'srv_tg_subscribers_hq',
         serviceName: 'Mass Campaign',
         target: '@channel_excess',
-        quantity: 500000,
+        quantity: 50000,
         chargeCents: 15000, // $150.00 > $87.00
       }),
     ).rejects.toThrow(/Insufficient balance/i);
@@ -82,7 +84,96 @@ describe('Architecture & Persistence Integration Gates', () => {
     expect(ledgerAfter.length).toBe(initialLedger.length);
   });
 
-  it('verifies simulated refresh persistence: IndexedDB survives without leaking financial state to localStorage', async () => {
+  describe('Repository-Level Input Validation Enforcement', () => {
+    it('rejects order placement with non-existent user account', async () => {
+      await expect(
+        orderRepository.placeOrder({
+          userId: 'usr_ghost_unknown',
+          serviceId: 'srv_tg_subscribers_hq',
+          target: '@channel_test',
+          quantity: 1000,
+          chargeCents: 140,
+        }),
+      ).rejects.toThrow(/User not found/i);
+    });
+
+    it('rejects order placement with non-existent service ID', async () => {
+      await expect(
+        orderRepository.placeOrder({
+          userId,
+          serviceId: 'srv_nonexistent_service_xyz',
+          target: '@channel_test',
+          quantity: 1000,
+          chargeCents: 140,
+        }),
+      ).rejects.toThrow(/Service not found/i);
+    });
+
+    it('rejects order placement with invalid non-integer or zero quantities', async () => {
+      await expect(
+        orderRepository.placeOrder({
+          userId,
+          serviceId: 'srv_tg_subscribers_hq',
+          target: '@channel_test',
+          quantity: 0,
+          chargeCents: 140,
+        }),
+      ).rejects.toThrow(/Invalid quantity/i);
+
+      await expect(
+        orderRepository.placeOrder({
+          userId,
+          serviceId: 'srv_tg_subscribers_hq',
+          target: '@channel_test',
+          quantity: 15.5,
+          chargeCents: 140,
+        }),
+      ).rejects.toThrow(/Invalid quantity/i);
+    });
+
+    it('rejects order placement with invalid non-integer or non-positive charge amount', async () => {
+      await expect(
+        orderRepository.placeOrder({
+          userId,
+          serviceId: 'srv_tg_subscribers_hq',
+          target: '@channel_test',
+          quantity: 1000,
+          chargeCents: -50,
+        }),
+      ).rejects.toThrow(/Invalid charge amount/i);
+
+      await expect(
+        orderRepository.placeOrder({
+          userId,
+          serviceId: 'srv_tg_subscribers_hq',
+          target: '@channel_test',
+          quantity: 1000,
+          chargeCents: 140.25,
+        }),
+      ).rejects.toThrow(/Invalid charge amount/i);
+    });
+
+    it('rejects order placement with empty or whitespace-only target link', async () => {
+      await expect(
+        orderRepository.placeOrder({
+          userId,
+          serviceId: 'srv_tg_subscribers_hq',
+          target: '   ',
+          quantity: 1000,
+          chargeCents: 140,
+        }),
+      ).rejects.toThrow(/Invalid target/i);
+    });
+  });
+
+  /**
+   * Scope Documentation:
+   * This unit/integration test verifies in-process repository query persistence:
+   * 1. Confirms that financial records written to Dexie persist across subsequent independent repository reads.
+   * 2. Confirms that localStorage remains strictly confined to UI session state without financial leakage.
+   * Note: Full multi-tab browser context restarts are covered in end-to-end browser workflows.
+   */
+  it('verifies in-process repository query persistence across operations without leaking financial state to localStorage', async () => {
     // 1. Place an order
     await orderRepository.placeOrder({
       userId,
@@ -101,7 +192,7 @@ describe('Architecture & Persistence Integration Gates', () => {
       expect(parsed.state.ledgerEntries).toBeUndefined();
     }
 
-    // 3. Simulate page reload / new session re-query directly from Dexie
+    // 3. Verify independent subsequent query from Dexie reflects correct balance and orders
     const reloadedWallet = await walletRepository.getWallet(userId);
     expect(reloadedWallet.balanceCents).toBe(8700 - 75);
 

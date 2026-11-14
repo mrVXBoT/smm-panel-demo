@@ -30,75 +30,132 @@ export const orderRepository = {
 
   /**
    * Atomic Order Creation & Wallet Debit:
-   * 1. Reads ledger entries for wallet to derive active balance.
-   * 2. Checks that balance is sufficient.
-   * 3. Inserts order with 'pending' status.
-   * 4. Inserts ledger debit entry (negative amount).
-   * 5. Updates wallet balance.
+   * 1. Validates user existence, service catalog existence, positive integer quantity, and positive integer chargeCents.
+   * 2. Reads ledger entries for wallet to derive active balance.
+   * 3. Checks that balance is sufficient.
+   * 4. Generates collision-resistant identifiers via crypto.randomUUID().
+   * 5. Inserts order with 'pending' status.
+   * 6. Inserts ledger debit entry (negative amount).
+   * 7. Updates wallet balance.
    * All executed in a single atomic Dexie transaction.
    */
   async placeOrder(params: PlaceOrderParams): Promise<Order> {
-    return await db.transaction('rw', [db.orders, db.ledgerEntries, db.wallets], async () => {
-      const walletId = `wal_${params.userId}`;
+    return await db.transaction(
+      'rw',
+      [db.orders, db.ledgerEntries, db.wallets, db.users, db.services],
+      async () => {
+        // 1. Repository-level input validations
+        if (
+          !params.userId ||
+          typeof params.userId !== 'string' ||
+          params.userId.trim().length === 0
+        ) {
+          throw new Error('Invalid user ID: user ID is required.');
+        }
+        const user = await db.users.get(params.userId);
+        if (!user) {
+          throw new Error(`User not found: account "${params.userId}" does not exist.`);
+        }
 
-      // Calculate current balance directly from ledger entries to guarantee integrity
-      const ledgerEntries = await db.ledgerEntries.where('walletId').equals(walletId).toArray();
-      const currentBalance = ledgerEntries.reduce((sum, entry) => sum + entry.amountCents, 0);
+        if (
+          !params.serviceId ||
+          typeof params.serviceId !== 'string' ||
+          params.serviceId.trim().length === 0
+        ) {
+          throw new Error('Invalid service ID: service ID is required.');
+        }
+        const service = await db.services.get(params.serviceId);
+        if (!service) {
+          throw new Error(`Service not found: catalog item "${params.serviceId}" does not exist.`);
+        }
 
-      if (currentBalance < params.chargeCents) {
-        throw new Error(
-          `Insufficient balance. Available: $${(currentBalance / 100).toFixed(2)}, Required: $${(
-            params.chargeCents / 100
-          ).toFixed(2)}.`,
-        );
-      }
+        if (!Number.isInteger(params.quantity) || params.quantity <= 0) {
+          throw new Error('Invalid quantity: quantity must be a positive integer.');
+        }
+        if (service.minQty && params.quantity < service.minQty) {
+          throw new Error(
+            `Quantity below minimum requirement: must be at least ${service.minQty}.`,
+          );
+        }
+        if (service.maxQty && params.quantity > service.maxQty) {
+          throw new Error(`Quantity exceeds maximum allowance: cannot exceed ${service.maxQty}.`);
+        }
 
-      const timestamp = new Date().toISOString();
-      const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+        if (!Number.isInteger(params.chargeCents) || params.chargeCents <= 0) {
+          throw new Error('Invalid charge amount: charge must be a positive integer in cents.');
+        }
 
-      const newOrder: Order = {
-        id: orderId,
-        userId: params.userId,
-        serviceId: params.serviceId,
-        target: params.target,
-        quantity: params.quantity,
-        chargeCents: params.chargeCents,
-        status: 'pending',
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      };
+        if (
+          !params.target ||
+          typeof params.target !== 'string' ||
+          params.target.trim().length === 0
+        ) {
+          throw new Error('Invalid target: order destination link or handle cannot be empty.');
+        }
 
-      await db.orders.add(newOrder);
+        const walletId = `wal_${params.userId}`;
 
-      const newLedgerEntry: LedgerEntry = {
-        id: `TXN-${Math.floor(500 + Math.random() * 500)}`,
-        walletId,
-        orderId,
-        amountCents: -params.chargeCents,
-        kind: 'order_charge',
-        createdAt: timestamp,
-        description: `Order #${orderId} (${params.serviceName || params.serviceId})`,
-      };
+        // 2. Calculate current balance directly from ledger entries to guarantee integrity
+        const ledgerEntries = await db.ledgerEntries.where('walletId').equals(walletId).toArray();
+        const currentBalance = ledgerEntries.reduce((sum, entry) => sum + entry.amountCents, 0);
 
-      await db.ledgerEntries.add(newLedgerEntry);
+        if (currentBalance < params.chargeCents) {
+          throw new Error(
+            `Insufficient balance. Available: $${(currentBalance / 100).toFixed(2)}, Required: $${(
+              params.chargeCents / 100
+            ).toFixed(2)}.`,
+          );
+        }
 
-      // Update cached wallet balance
-      const newBalance = currentBalance - params.chargeCents;
-      const existingWallet = await db.wallets.get(walletId);
-      if (existingWallet) {
-        existingWallet.balanceCents = newBalance;
-        await db.wallets.put(existingWallet);
-      } else {
-        await db.wallets.add({
-          id: walletId,
+        const timestamp = new Date().toISOString();
+        // Collision-resistant UUID-based identifier
+        const orderId = `ORD-${crypto.randomUUID()}`;
+
+        const newOrder: Order = {
+          id: orderId,
           userId: params.userId,
-          currency: 'USD',
-          balanceCents: newBalance,
-        });
-      }
+          serviceId: params.serviceId,
+          target: params.target.trim(),
+          quantity: params.quantity,
+          chargeCents: params.chargeCents,
+          status: 'pending',
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        };
 
-      return newOrder;
-    });
+        await db.orders.add(newOrder);
+
+        // Collision-resistant UUID-based transaction identifier
+        const newLedgerEntry: LedgerEntry = {
+          id: `TXN-${crypto.randomUUID()}`,
+          walletId,
+          orderId,
+          amountCents: -params.chargeCents,
+          kind: 'order_charge',
+          createdAt: timestamp,
+          description: `Order #${orderId.substring(0, 12)} (${params.serviceName || service.name})`,
+        };
+
+        await db.ledgerEntries.add(newLedgerEntry);
+
+        // Update cached wallet balance
+        const newBalance = currentBalance - params.chargeCents;
+        const existingWallet = await db.wallets.get(walletId);
+        if (existingWallet) {
+          existingWallet.balanceCents = newBalance;
+          await db.wallets.put(existingWallet);
+        } else {
+          await db.wallets.add({
+            id: walletId,
+            userId: params.userId,
+            currency: 'USD',
+            balanceCents: newBalance,
+          });
+        }
+
+        return newOrder;
+      },
+    );
   },
 
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {

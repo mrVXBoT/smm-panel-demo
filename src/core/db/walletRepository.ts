@@ -45,8 +45,8 @@ export const walletRepository = {
     return await db.transaction('rw', [db.ledgerEntries, db.wallets], async () => {
       const walletId = `wal_${userId}`;
       const timestamp = new Date().toISOString();
-      const paymentId = `PAY-${Math.floor(8000 + Math.random() * 1000)}`;
-      const txnId = `TXN-${Math.floor(600 + Math.random() * 400)}`;
+      const paymentId = `PAY-${crypto.randomUUID()}`;
+      const txnId = `TXN-${crypto.randomUUID()}`;
 
       const payment: PaymentAttempt = {
         id: paymentId,

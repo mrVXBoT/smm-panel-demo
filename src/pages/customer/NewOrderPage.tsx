@@ -136,7 +136,7 @@ export function NewOrderPage() {
         <div className="text-right">
           <span className="text-xs text-slate-400">Available Balance:</span>
           <div className="text-xl font-extrabold font-mono text-brand-primary">
-            {formatCents(currentUser.balanceCents)}
+            {wallet.isLoading ? '...' : formatCents(wallet.balanceCents)}
           </div>
         </div>
       </div>
