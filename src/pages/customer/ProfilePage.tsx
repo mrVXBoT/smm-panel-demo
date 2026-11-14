@@ -1,12 +1,15 @@
 import { User, Key, RefreshCw } from 'lucide-react';
 import { useAppStore } from '../../app/store';
+import { useCustomerWallet } from '../../core/db/hooks';
+import { resetDemoSystem } from '../../core/db/reset';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 
 export function ProfilePage() {
-  const { currentUser, resetDemoData, switchRole } = useAppStore();
+  const { currentUser, switchRole } = useAppStore();
+  const wallet = useCustomerWallet(currentUser.id);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -47,7 +50,7 @@ export function ProfilePage() {
               </div>
               <p className="text-xs text-slate-400 mt-0.5">{currentUser.email}</p>
               <div className="text-xs font-mono font-semibold text-brand-primary mt-1">
-                Balance: {formatCents(currentUser.balanceCents)}
+                Balance: {formatCents(wallet.balanceCents)}
               </div>
             </div>
           </div>
@@ -82,7 +85,12 @@ export function ProfilePage() {
               <span>Switch to {currentUser.role === 'customer' ? 'Admin' : 'Customer'} Role</span>
             </Button>
 
-            <Button variant="danger" size="sm" onClick={resetDemoData} className="gap-2 text-xs">
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => void resetDemoSystem()}
+              className="gap-2 text-xs"
+            >
               <RefreshCw className="w-4 h-4" />
               <span>Reset State to Seed ($87.00)</span>
             </Button>

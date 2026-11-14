@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { WalletPage } from './WalletPage';
-import { useAppStore } from '../../app/store';
+import { resetDemoSystem } from '../../core/db/reset';
 
 describe('WalletPage Client Payment Flow', () => {
-  beforeEach(() => {
-    useAppStore.getState().resetDemoData();
+  beforeEach(async () => {
+    await resetDemoSystem();
   });
 
   it('renders initial demo customer balance of $87.00', () => {

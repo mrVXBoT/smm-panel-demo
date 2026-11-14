@@ -2,16 +2,16 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useAppStore } from './store';
 import { INITIAL_DEMO_CUSTOMER } from '../core/fixtures/demoUser';
 
-describe('Global App State (Zustand & Persistence)', () => {
+describe('Global App State (Zustand UI & Session Context)', () => {
   beforeEach(() => {
-    useAppStore.getState().resetDemoData();
+    useAppStore.getState().resetDemoSession();
   });
 
-  it('starts with initial demo customer having $87.00 (8,700 cents)', () => {
+  it('starts with initial demo customer context', () => {
     const state = useAppStore.getState();
-    expect(state.currentUser.balanceCents).toBe(8700);
     expect(state.currentUser.role).toBe('customer');
     expect(state.currentUser.displayName).toBe(INITIAL_DEMO_CUSTOMER.displayName);
+    expect(state.isAuthenticated).toBe(true);
   });
 
   it('toggles theme between dark and light', () => {
@@ -33,59 +33,36 @@ describe('Global App State (Zustand & Persistence)', () => {
 
     store.switchRole('customer');
     expect(useAppStore.getState().currentUser.role).toBe('customer');
-    expect(useAppStore.getState().currentUser.balanceCents).toBe(8700);
+    expect(useAppStore.getState().currentUser.username).toBe('demouser');
   });
 
-  it('prevents adding order if balance is insufficient', () => {
+  it('handles loginAsDemo and logout', () => {
     const store = useAppStore.getState();
-    // Attempt to order exceeding $87.00
-    const result = store.addOrder({
-      serviceId: 'srv_large_order',
-      target: '@channel_large',
-      quantity: 100000,
-      chargeCents: 15000, // $150.00 > $87.00
-    });
+    store.logout();
+    expect(useAppStore.getState().isAuthenticated).toBe(false);
 
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Insufficient balance');
-    expect(useAppStore.getState().currentUser.balanceCents).toBe(8700);
+    store.loginAsDemo('customer');
+    expect(useAppStore.getState().isAuthenticated).toBe(true);
+    expect(useAppStore.getState().currentUser.role).toBe('customer');
   });
 
-  it('successfully creates order, deducts balance, and updates ledger when funds are sufficient', () => {
+  it('manages sidebar navigation state', () => {
     const store = useAppStore.getState();
-    const result = store.addOrder({
-      serviceId: 'srv_tg_subscribers_hq',
-      serviceName: 'Telegram Subscribers',
-      target: '@channel_valid',
-      quantity: 1000,
-      chargeCents: 140, // $1.40
-    });
+    expect(store.sidebarOpen).toBe(false);
 
-    expect(result.success).toBe(true);
-    expect(result.order).toBeDefined();
-    expect(useAppStore.getState().currentUser.balanceCents).toBe(8700 - 140);
-    expect(useAppStore.getState().orders[0]?.id).toBe(result.order?.id);
+    store.toggleSidebar();
+    expect(useAppStore.getState().sidebarOpen).toBe(true);
 
-    const latestLedger = useAppStore.getState().ledgerEntries[0];
-    expect(latestLedger?.amountCents).toBe(-140);
-    expect(latestLedger?.kind).toBe('order_charge');
+    store.setSidebarOpen(false);
+    expect(useAppStore.getState().sidebarOpen).toBe(false);
   });
 
-  it('adds simulated top-up and credits customer balance', () => {
-    const store = useAppStore.getState();
-    const { payment, ledgerEntry } = store.addTopUp(2500, 'visa_demo');
-
-    expect(payment.amountCents).toBe(2500);
-    expect(ledgerEntry.amountCents).toBe(2500);
-    expect(useAppStore.getState().currentUser.balanceCents).toBe(8700 + 2500);
-  });
-
-  it('resetDemoData restores $87.00 customer seed', () => {
-    const store = useAppStore.getState();
-    store.addTopUp(5000, 'mastercard_demo');
-    expect(useAppStore.getState().currentUser.balanceCents).toBe(8700 + 5000);
-
-    store.resetDemoData();
-    expect(useAppStore.getState().currentUser.balanceCents).toBe(8700);
+  it('does not store orders or ledger arrays in Zustand localStorage', () => {
+    const rawStorage = localStorage.getItem('smm_panel_demo_session_v2');
+    if (rawStorage) {
+      const parsed = JSON.parse(rawStorage);
+      expect(parsed.state.orders).toBeUndefined();
+      expect(parsed.state.ledgerEntries).toBeUndefined();
+    }
   });
 });

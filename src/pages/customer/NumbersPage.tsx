@@ -11,6 +11,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useAppStore } from '../../app/store';
+import { useCustomerWallet } from '../../core/db/hooks';
+import { orderRepository } from '../../core/db/orderRepository';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
@@ -77,7 +79,8 @@ interface SmsMessage {
 }
 
 export function NumbersPage() {
-  const { currentUser, addOrder } = useAppStore();
+  const { currentUser } = useAppStore();
+  const wallet = useCustomerWallet(currentUser.id);
 
   const [selectedCountryCode, setSelectedCountryCode] = useState<string>('US');
   const activeCountry = useMemo(
@@ -120,23 +123,24 @@ export function NumbersPage() {
     ]);
   };
 
-  const handleLeaseFreshNumber = () => {
+  const handleLeaseFreshNumber = async () => {
     setInsufficientError(false);
-    if (currentUser.balanceCents < activeCountry.rateCents) {
+    if (wallet.balanceCents < activeCountry.rateCents) {
       setInsufficientError(true);
       return;
     }
 
     const newNum = activeCountry.generateNumber();
-    const result = addOrder({
-      serviceId: 'srv_num_usa_fictional',
-      serviceName: `${activeCountry.name} Fictional Number (${newNum})`,
-      target: newNum,
-      quantity: 1,
-      chargeCents: activeCountry.rateCents,
-    });
+    try {
+      await orderRepository.placeOrder({
+        userId: currentUser.id,
+        serviceId: 'srv_num_usa_fictional',
+        serviceName: `${activeCountry.name} Fictional Number (${newNum})`,
+        target: newNum,
+        quantity: 1,
+        chargeCents: activeCountry.rateCents,
+      });
 
-    if (result.success) {
       setActiveNumber(newNum);
       setLeaseSuccess(`Leased new ${activeCountry.name} demo number: ${newNum}`);
       setMessages([
@@ -148,6 +152,8 @@ export function NumbersPage() {
           time: 'Just now',
         },
       ]);
+    } catch {
+      setInsufficientError(true);
     }
   };
 
@@ -194,7 +200,7 @@ export function NumbersPage() {
         <div className="text-right">
           <span className="text-xs text-slate-400">Balance:</span>
           <div className="font-mono text-base font-extrabold text-brand-primary">
-            {formatCents(currentUser.balanceCents)}
+            {formatCents(wallet.balanceCents)}
           </div>
         </div>
       </div>

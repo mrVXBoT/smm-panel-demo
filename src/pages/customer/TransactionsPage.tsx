@@ -2,13 +2,15 @@ import { useMemo } from 'react';
 import { ArrowDownRight, ArrowUpRight, Clock } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useAppStore } from '../../app/store';
+import { useCustomerLedger } from '../../core/db/hooks';
 import { formatCents } from '../../core/utils/currency';
 import { Badge } from '../../components/ui/badge';
 import { DataTable } from '../../components/ui/data-table';
 import type { LedgerEntry } from '../../core/types/models';
 
 export function TransactionsPage() {
-  const { ledgerEntries } = useAppStore();
+  const { currentUser } = useAppStore();
+  const ledgerEntries = useCustomerLedger(currentUser.id);
 
   const columns = useMemo<ColumnDef<LedgerEntry>[]>(
     () => [

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, Clock } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useAppStore } from '../../app/store';
+import { useCustomerOrders } from '../../core/db/hooks';
 import { INITIAL_SERVICES } from '../../core/fixtures/services';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
@@ -11,7 +12,8 @@ import { DataTable } from '../../components/ui/data-table';
 import type { Order, OrderStatus } from '../../core/types/models';
 
 export function OrdersPage() {
-  const { orders } = useAppStore();
+  const { currentUser } = useAppStore();
+  const orders = useCustomerOrders(currentUser.id);
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {

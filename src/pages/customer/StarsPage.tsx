@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Sparkles, Star, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../app/store';
+import { useCustomerWallet } from '../../core/db/hooks';
+import { orderRepository } from '../../core/db/orderRepository';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
@@ -8,7 +10,8 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 
 export function StarsPage() {
-  const { currentUser, addOrder } = useAppStore();
+  const { currentUser } = useAppStore();
+  const wallet = useCustomerWallet(currentUser.id);
 
   const [recipient, setRecipient] = useState('@demo_bot');
   const [selectedPack, setSelectedPack] = useState(50);
@@ -25,9 +28,9 @@ export function StarsPage() {
   ];
 
   const activePack = packs.find((p) => p.stars === selectedPack) || packs[0]!;
-  const hasInsufficientBalance = currentUser.balanceCents < activePack.priceCents;
+  const hasInsufficientBalance = wallet.balanceCents < activePack.priceCents;
 
-  const handlePurchase = (e: React.FormEvent) => {
+  const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -42,8 +45,9 @@ export function StarsPage() {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      const result = addOrder({
+    try {
+      const order = await orderRepository.placeOrder({
+        userId: currentUser.id,
         serviceId: 'srv_tg_stars_50',
         serviceName: `${activePack.stars} Telegram Stars Gift (${recipient})`,
         target: recipient.trim(),
@@ -52,13 +56,12 @@ export function StarsPage() {
       });
 
       setIsSubmitting(false);
-
-      if (!result.success) {
-        setErrorMessage(result.error || 'Failed to dispatch stars.');
-      } else if (result.order) {
-        setSuccessOrderId(result.order.id);
-      }
-    }, 450);
+      setSuccessOrderId(order.id);
+    } catch (err: unknown) {
+      setIsSubmitting(false);
+      const msg = err instanceof Error ? err.message : 'Failed to dispatch stars.';
+      setErrorMessage(msg);
+    }
   };
 
   return (
@@ -80,7 +83,7 @@ export function StarsPage() {
         <div className="text-right">
           <span className="text-xs text-slate-400">Available:</span>
           <div className="text-xl font-mono font-extrabold text-brand-primary">
-            {formatCents(currentUser.balanceCents)}
+            {formatCents(wallet.balanceCents)}
           </div>
         </div>
       </div>
@@ -174,9 +177,8 @@ export function StarsPage() {
                 <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>
-                    Insufficient balance for this pack. You have{' '}
-                    {formatCents(currentUser.balanceCents)}, but{' '}
-                    {formatCents(activePack.priceCents)} is required.
+                    Insufficient balance for this pack. You have {formatCents(wallet.balanceCents)},
+                    but {formatCents(activePack.priceCents)} is required.
                   </span>
                 </div>
               )}

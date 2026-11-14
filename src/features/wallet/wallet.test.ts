@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { walletService } from './services/walletService';
-import { useAppStore } from '../../app/store';
+import { resetDatabaseToSeed } from '../../core/db/seed';
 
 describe('Unified MockWalletService & Ledger Accounting', () => {
-  beforeEach(() => {
-    useAppStore.getState().resetDemoData();
+  beforeEach(async () => {
+    await resetDatabaseToSeed();
   });
 
-  it('calculates initial customer wallet balance from store as 8,700 cents ($87.00)', async () => {
+  it('calculates initial customer wallet balance from ledger as 8,700 cents ($87.00)', async () => {
     const wallet = await walletService.getWallet('usr_demo_customer_01');
     expect(wallet.balanceCents).toBe(8700);
     expect(wallet.currency).toBe('USD');
@@ -51,7 +51,8 @@ describe('Unified MockWalletService & Ledger Accounting', () => {
       method: 'visa_demo',
     });
 
-    const resetWallet = await walletService.resetWallet('usr_demo_customer_01');
+    await resetDatabaseToSeed();
+    const resetWallet = await walletService.getWallet('usr_demo_customer_01');
     expect(resetWallet.balanceCents).toBe(8700);
   });
 });

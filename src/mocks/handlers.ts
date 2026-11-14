@@ -7,6 +7,9 @@ import {
   DEMO_CREDENTIALS,
 } from '../core/fixtures/demoUser';
 import { useAppStore } from '../app/store';
+import { orderRepository } from '../core/db/orderRepository';
+import { walletRepository } from '../core/db/walletRepository';
+import { orderService } from '../features/orders/services/orderService';
 
 export const handlers = [
   // Categories
@@ -36,10 +39,10 @@ export const handlers = [
     return HttpResponse.json(service);
   }),
 
-  // Orders
+  // Orders - backed by Dexie database
   http.get('*/api/orders', async () => {
     await delay(150);
-    const orders = useAppStore.getState().orders;
+    const orders = await orderRepository.getAll();
     return HttpResponse.json(orders);
   }),
 
@@ -51,43 +54,35 @@ export const handlers = [
       quantity: number;
     };
 
-    const service = INITIAL_SERVICES.find((s) => s.id === body.serviceId);
-    if (!service) {
-      return HttpResponse.json({ error: 'Invalid service' }, { status: 400 });
-    }
-
-    let chargeCents = 0;
-    if (service.fixedPriceCents) {
-      chargeCents = service.fixedPriceCents * body.quantity;
-    } else if (service.pricePerThousandCents) {
-      chargeCents = Math.round((service.pricePerThousandCents * body.quantity) / 1000);
-    }
-
     const store = useAppStore.getState();
-    const result = store.addOrder({
-      serviceId: body.serviceId,
-      serviceName: service.name,
-      target: body.target,
-      quantity: body.quantity,
-      chargeCents,
-    });
 
-    if (!result.success) {
-      return HttpResponse.json({ error: result.error }, { status: 422 });
+    try {
+      const order = await orderService.createOrder({
+        userId: store.currentUser.id,
+        serviceId: body.serviceId,
+        target: body.target,
+        quantity: body.quantity,
+      });
+
+      return HttpResponse.json(order, { status: 201 });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Order creation failed';
+      return HttpResponse.json({ error: message }, { status: 422 });
     }
-
-    return HttpResponse.json(result.order, { status: 201 });
   }),
 
-  // Wallet
+  // Wallet - backed by Dexie ledger
   http.get('*/api/wallet', async () => {
     await delay(100);
     const store = useAppStore.getState();
+    const wallet = await walletRepository.getWallet(store.currentUser.id);
+    const ledgerEntries = await walletRepository.getLedgerEntries(store.currentUser.id);
+
     return HttpResponse.json({
       userId: store.currentUser.id,
       currency: 'USD',
-      balanceCents: store.currentUser.balanceCents,
-      ledgerEntries: store.ledgerEntries,
+      balanceCents: wallet.balanceCents,
+      ledgerEntries,
     });
   }),
 

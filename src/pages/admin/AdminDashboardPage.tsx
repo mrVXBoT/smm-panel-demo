@@ -12,34 +12,38 @@ import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { INITIAL_SERVICES } from '../../core/fixtures/services';
+import { useAdminStats } from '../../core/db/hooks';
+import { formatCents } from '../../core/utils/currency';
 
 export function AdminDashboardPage() {
+  const liveStats = useAdminStats();
+
   const stats = [
     {
-      label: 'Simulated Gross Volume',
-      value: '$1,420.50',
+      label: 'Simulated Order Volume',
+      value: formatCents(liveStats?.totalRevenueCents ?? 215),
       change: '+18.2%',
       icon: TrendingUp,
       color: 'text-emerald-400',
     },
     {
       label: 'Active Catalog Services',
-      value: INITIAL_SERVICES.length.toString(),
+      value: (liveStats?.activeServicesCount ?? INITIAL_SERVICES.length).toString(),
       change: '100% operational',
       icon: Layers,
       color: 'text-brand-primary',
     },
     {
       label: 'Demo User Accounts',
-      value: '2',
+      value: (liveStats?.activeUsersCount ?? 2).toString(),
       change: 'Customer + Admin',
       icon: Users,
       color: 'text-brand-accent',
     },
     {
-      label: 'Simulated Payments Logged',
-      value: '14',
-      change: 'All Visa/MC test passes',
+      label: 'Total Orders Logged',
+      value: (liveStats?.totalOrders ?? 2).toString(),
+      change: 'Dexie Live Records',
       icon: CreditCard,
       color: 'text-purple-400',
     },

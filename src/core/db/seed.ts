@@ -1,7 +1,7 @@
 import { db } from './database';
 import { INITIAL_DEMO_CUSTOMER, INITIAL_DEMO_ADMIN } from '../fixtures/demoUser';
 import { INITIAL_SERVICES } from '../fixtures/services';
-import { INITIAL_ORDERS, INITIAL_LEDGER } from '../../app/store';
+import { INITIAL_ORDERS, INITIAL_LEDGER } from '../fixtures/initialOrders';
 
 export async function seedDatabase(): Promise<void> {
   const userCount = await db.users.count();

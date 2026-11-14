@@ -1,25 +1,34 @@
 import { useState } from 'react';
 import { CreditCard, ShieldCheck, Sparkles, Info, CheckCircle } from 'lucide-react';
 import { useAppStore } from '../../app/store';
+import { useCustomerWallet } from '../../core/db/hooks';
+import { resetDemoSystem } from '../../core/db/reset';
+import { walletRepository } from '../../core/db/walletRepository';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 
 export function WalletPage() {
-  const { currentUser, resetDemoData, addTopUp } = useAppStore();
+  const { currentUser } = useAppStore();
+  const wallet = useCustomerWallet(currentUser.id);
 
   const [displayedPaymentNotice, setDisplayedPaymentNotice] = useState<string | null>(null);
   const [testCreditSuccess, setTestCreditSuccess] = useState<string | null>(null);
 
   const handlePayButtonClick = () => {
-    // Client requirement: with click, display the simulated label "Pay by Visa or Mastercard"
+    // Client requirement: clicking the action strictly displays the simulated label "Pay by Visa or Mastercard"
+    // No gateway execution, no card processing, no automatic crediting
     setDisplayedPaymentNotice('Pay by Visa or Mastercard');
     setTestCreditSuccess(null);
   };
 
-  const handleOptionalTestTopUp = (amountDollars: number) => {
-    const { ledgerEntry } = addTopUp(amountDollars * 100, 'visa_demo');
+  const handleOptionalTestTopUp = async (amountDollars: number) => {
+    const { ledgerEntry } = await walletRepository.simulateTopUp(
+      currentUser.id,
+      amountDollars * 100,
+      'visa_demo',
+    );
     setTestCreditSuccess(
       `Optional test top-up added: ${formatCents(ledgerEntry.amountCents)} credited to demo balance.`,
     );
@@ -43,7 +52,7 @@ export function WalletPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={resetDemoData}
+          onClick={() => void resetDemoSystem()}
           className="gap-2 text-xs border-amber-500/40 text-amber-300 hover:bg-amber-500/10 cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -58,7 +67,7 @@ export function WalletPage() {
             Current Simulated Balance
           </span>
           <div className="text-4xl sm:text-5xl font-mono font-extrabold text-white flex items-baseline gap-2">
-            <span>{formatCents(currentUser.balanceCents)}</span>
+            <span>{formatCents(wallet.balanceCents)}</span>
             <span className="text-xs font-sans text-brand-primary font-bold">USD</span>
           </div>
           <p className="text-xs text-slate-400">
@@ -70,8 +79,8 @@ export function WalletPage() {
         <div className="px-4 py-2.5 rounded-2xl bg-brand-primary/10 border border-brand-primary/30 flex items-center gap-2.5">
           <ShieldCheck className="w-5 h-5 text-brand-primary" />
           <div className="text-xs">
-            <div className="font-bold text-white">Initial Seed Active</div>
-            <div className="text-slate-400">Default $87.00 Ready</div>
+            <div className="font-bold text-white">Dexie Ledger Active</div>
+            <div className="text-slate-400">Initial $87.00 Ready</div>
           </div>
         </div>
       </div>
@@ -167,14 +176,14 @@ export function WalletPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => handleOptionalTestTopUp(25)}
+                  onClick={() => void handleOptionalTestTopUp(25)}
                   className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-brand-primary text-slate-300 text-xs font-mono font-semibold cursor-pointer transition-colors"
                 >
                   +$25.00
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleOptionalTestTopUp(50)}
+                  onClick={() => void handleOptionalTestTopUp(50)}
                   className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-brand-primary text-slate-300 text-xs font-mono font-semibold cursor-pointer transition-colors"
                 >
                   +$50.00

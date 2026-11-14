@@ -1,8 +1,9 @@
 import { AlertTriangle, Sparkles } from 'lucide-react';
 import { useAppStore } from '../../app/store';
+import { resetDemoSystem } from '../../core/db/reset';
 
 export function DemoWatermark() {
-  const { currentUser, switchRole, resetDemoData } = useAppStore();
+  const { currentUser, switchRole } = useAppStore();
 
   return (
     <div className="bg-gradient-to-r from-amber-500/20 via-sky-500/20 to-purple-500/20 border-b border-amber-500/30 px-4 py-1.5 text-xs text-amber-200">
@@ -30,7 +31,7 @@ export function DemoWatermark() {
           </button>
           <span className="text-slate-600">|</span>
           <button
-            onClick={resetDemoData}
+            onClick={() => void resetDemoSystem()}
             className="flex items-center gap-1 text-slate-400 hover:text-amber-300 transition-colors text-xs cursor-pointer"
             title="Reset demo balance and state to $87.00 seed"
           >

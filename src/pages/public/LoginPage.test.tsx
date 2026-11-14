@@ -6,7 +6,7 @@ import { useAppStore } from '../../app/store';
 
 describe('LoginPage Validation & Credential Checking', () => {
   beforeEach(() => {
-    useAppStore.getState().resetDemoData();
+    useAppStore.getState().resetDemoSession();
   });
 
   it('rejects invalid or arbitrary credentials with an error alert', async () => {

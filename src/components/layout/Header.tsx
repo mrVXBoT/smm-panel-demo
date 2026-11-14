@@ -14,6 +14,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { useAppStore } from '../../app/store';
+import { useCustomerWallet } from '../../core/db/hooks';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../ui/button';
 import { CommandMenu } from '../ui/command-menu';
@@ -21,6 +22,7 @@ import { startDemoTour } from '../ui/tour';
 
 export function Header() {
   const { theme, toggleTheme, currentUser, switchRole, sidebarOpen, toggleSidebar } = useAppStore();
+  const wallet = useCustomerWallet(currentUser.id);
 
   const [commandOpen, setCommandOpen] = useState(false);
   const location = useLocation();
@@ -143,7 +145,7 @@ export function Header() {
             >
               <Wallet className="w-3.5 h-3.5 text-brand-primary" />
               <span className="font-mono text-sm tracking-tight text-white">
-                {formatCents(currentUser.balanceCents)}
+                {formatCents(wallet.balanceCents)}
               </span>
               <span className="hidden sm:inline-block text-[10px] px-1.5 py-0.2 bg-brand-primary/20 rounded font-normal text-sky-200">
                 Demo

@@ -1,21 +1,14 @@
 import type { LedgerEntry, PaymentAttempt, Wallet } from '../../../core/types/models';
 import type { IWalletService, SimulatePaymentParams } from '../../../core/types/services';
-import { useAppStore } from '../../../app/store';
+import { walletRepository } from '../../../core/db/walletRepository';
 
 export class MockWalletService implements IWalletService {
   async getWallet(userId: string): Promise<Wallet> {
-    const store = useAppStore.getState();
-    return {
-      id: `wal_${userId}`,
-      userId,
-      currency: 'USD',
-      balanceCents: store.currentUser.balanceCents,
-    };
+    return walletRepository.getWallet(userId);
   }
 
-  async getLedger(_userId: string): Promise<LedgerEntry[]> {
-    const store = useAppStore.getState();
-    return [...store.ledgerEntries];
+  async getLedger(userId: string): Promise<LedgerEntry[]> {
+    return walletRepository.getLedgerEntries(userId);
   }
 
   async simulateTopUp(params: SimulatePaymentParams): Promise<{
@@ -24,7 +17,6 @@ export class MockWalletService implements IWalletService {
     ledgerEntry?: LedgerEntry;
   }> {
     const shouldSucceed = params.shouldSucceed ?? true;
-    const store = useAppStore.getState();
 
     if (!shouldSucceed) {
       const payment: PaymentAttempt = {
@@ -40,8 +32,11 @@ export class MockWalletService implements IWalletService {
       return { payment, wallet };
     }
 
-    const { payment, ledgerEntry } = store.addTopUp(params.amountCents, params.method);
-    const wallet = await this.getWallet(params.userId);
+    const { payment, ledgerEntry, wallet } = await walletRepository.simulateTopUp(
+      params.userId,
+      params.amountCents,
+      params.method,
+    );
 
     return {
       payment,
@@ -51,9 +46,7 @@ export class MockWalletService implements IWalletService {
   }
 
   async resetWallet(userId: string): Promise<Wallet> {
-    const store = useAppStore.getState();
-    store.resetDemoData();
-    return this.getWallet(userId);
+    return walletRepository.getWallet(userId);
   }
 }
 

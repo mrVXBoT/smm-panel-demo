@@ -7,6 +7,8 @@ import { INITIAL_CATEGORIES } from '../../core/fixtures/categories';
 import { INITIAL_SERVICES } from '../../core/fixtures/services';
 import { formatCents } from '../../core/utils/currency';
 import { useAppStore } from '../../app/store';
+import { useCustomerWallet } from '../../core/db/hooks';
+import { orderRepository } from '../../core/db/orderRepository';
 import { createOrderSchema, type OrderFormData } from '../../core/validation/orderSchema';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
@@ -17,7 +19,8 @@ import { toast } from 'sonner';
 export function NewOrderPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { currentUser, addOrder } = useAppStore();
+  const { currentUser } = useAppStore();
+  const wallet = useCustomerWallet(currentUser.id);
 
   const preselectedServiceId = searchParams.get('service');
   const initialService =
@@ -78,7 +81,7 @@ export function NewOrderPage() {
     return 0;
   }, [activeService, quantity]);
 
-  const hasInsufficientBalance = currentUser.balanceCents < computedTotalCents;
+  const hasInsufficientBalance = wallet.balanceCents < computedTotalCents;
 
   const handleCategoryChange = (catId: string) => {
     setSelectedCategoryId(catId);
@@ -91,25 +94,27 @@ export function NewOrderPage() {
     }
   };
 
-  const onSubmit = (data: OrderFormData) => {
+  const onSubmit = async (data: OrderFormData) => {
     if (hasInsufficientBalance) {
       toast.error('Insufficient demo balance. Please top up your wallet.');
       return;
     }
 
-    const result = addOrder({
-      serviceId: activeService.id,
-      serviceName: activeService.name,
-      target: data.target.trim(),
-      quantity: Number(data.quantity),
-      chargeCents: computedTotalCents,
-    });
+    try {
+      const order = await orderRepository.placeOrder({
+        userId: currentUser.id,
+        serviceId: activeService.id,
+        serviceName: activeService.name,
+        target: data.target.trim(),
+        quantity: Number(data.quantity),
+        chargeCents: computedTotalCents,
+      });
 
-    if (!result.success) {
-      toast.error(result.error || 'Failed to place order.');
-    } else if (result.order) {
-      setCreatedOrderId(result.order.id);
-      toast.success(`Order #${result.order.id} placed successfully!`);
+      setCreatedOrderId(order.id);
+      toast.success(`Order #${order.id} placed successfully!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to place order.';
+      toast.error(msg);
     }
   };
 
@@ -285,7 +290,7 @@ export function NewOrderPage() {
                         </span>
                         , but your wallet has{' '}
                         <span className="font-mono font-bold">
-                          {formatCents(currentUser.balanceCents)}
+                          {formatCents(wallet.balanceCents)}
                         </span>
                         .
                       </div>

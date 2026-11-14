@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { NumbersPage } from './NumbersPage';
-import { useAppStore } from '../../app/store';
+import { resetDemoSystem } from '../../core/db/reset';
 
 describe('NumbersPage Country Switching & Simulation', () => {
-  beforeEach(() => {
-    useAppStore.getState().resetDemoData();
+  beforeEach(async () => {
+    await resetDemoSystem();
   });
 
   it('renders default US line and switches country on selection', () => {

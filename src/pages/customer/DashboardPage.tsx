@@ -12,6 +12,7 @@ import {
   PieChart,
 } from 'lucide-react';
 import { useAppStore } from '../../app/store';
+import { useCustomerWallet, useCustomerOrders } from '../../core/db/hooks';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
@@ -22,7 +23,9 @@ import { SpendingBreakdownChart } from '../../components/charts/SpendingBreakdow
 import { startDemoTour } from '../../components/ui/tour';
 
 export function DashboardPage() {
-  const { currentUser, orders } = useAppStore();
+  const { currentUser } = useAppStore();
+  const wallet = useCustomerWallet(currentUser.id);
+  const orders = useCustomerOrders(currentUser.id);
 
   return (
     <div className="space-y-6">
@@ -38,7 +41,7 @@ export function DashboardPage() {
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
             Your simulation account is loaded with{' '}
             <strong className="text-brand-primary font-mono">
-              {formatCents(currentUser.balanceCents)}
+              {formatCents(wallet.balanceCents)}
             </strong>
             . Place test orders, explore Telegram Stars, or simulate mock Visa/Mastercard payments.
           </p>
@@ -79,7 +82,7 @@ export function DashboardPage() {
             <div>
               <div className="text-xs text-slate-400 font-medium">Available Balance</div>
               <div className="text-2xl font-extrabold text-white font-mono mt-1">
-                {formatCents(currentUser.balanceCents)}
+                {formatCents(wallet.balanceCents)}
               </div>
               <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />

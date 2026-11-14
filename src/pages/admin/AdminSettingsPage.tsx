@@ -1,12 +1,10 @@
 import { Settings, RefreshCw, Shield, AlertTriangle } from 'lucide-react';
-import { useAppStore } from '../../app/store';
+import { resetDemoSystem } from '../../core/db/reset';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 
 export function AdminSettingsPage() {
-  const { resetDemoData } = useAppStore();
-
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
@@ -35,7 +33,12 @@ export function AdminSettingsPage() {
               mock orders and simulated ledger entries.
             </p>
             <div>
-              <Button variant="danger" size="sm" onClick={resetDemoData} className="gap-2 text-xs">
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => void resetDemoSystem()}
+                className="gap-2 text-xs"
+              >
                 <RefreshCw className="w-4 h-4" />
                 <span>Re-seed Simulation ($87.00)</span>
               </Button>

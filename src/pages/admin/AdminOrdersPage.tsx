@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { ListOrdered } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { useAppStore } from '../../app/store';
+import { useAllOrders } from '../../core/db/hooks';
+import { orderRepository } from '../../core/db/orderRepository';
 import { INITIAL_SERVICES } from '../../core/fixtures/services';
 import { formatCents } from '../../core/utils/currency';
 import { Badge } from '../../components/ui/badge';
@@ -10,7 +11,19 @@ import { DataTable } from '../../components/ui/data-table';
 import type { Order, OrderStatus } from '../../core/types/models';
 
 export function AdminOrdersPage() {
-  const { orders, advanceOrderStatus } = useAppStore();
+  const orders = useAllOrders();
+
+  const advanceOrderStatus = async (orderId: string, currentStatus: OrderStatus) => {
+    const nextStatus: OrderStatus =
+      currentStatus === 'pending'
+        ? 'processing'
+        : currentStatus === 'processing'
+          ? 'completed'
+          : currentStatus === 'completed'
+            ? 'refunded'
+            : 'pending';
+    await orderRepository.updateStatus(orderId, nextStatus);
+  };
 
   const getServiceName = (serviceId: string) => {
     const s = INITIAL_SERVICES.find((item) => item.id === serviceId);
@@ -86,7 +99,7 @@ export function AdminOrdersPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => advanceOrderStatus(row.original.id)}
+            onClick={() => void advanceOrderStatus(row.original.id, row.original.status)}
             className="text-[11px] h-7 px-2.5 text-brand-primary hover:text-white cursor-pointer"
           >
             Advance State
@@ -94,7 +107,7 @@ export function AdminOrdersPage() {
         ),
       },
     ],
-    [advanceOrderStatus],
+    [],
   );
 
   return (

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Crown, CheckCircle, Copy, Check, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../app/store';
+import { useCustomerWallet } from '../../core/db/hooks';
+import { orderRepository } from '../../core/db/orderRepository';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
@@ -8,7 +10,8 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 
 export function PremiumPage() {
-  const { currentUser, addOrder } = useAppStore();
+  const { currentUser } = useAppStore();
+  const wallet = useCustomerWallet(currentUser.id);
 
   const [recipient, setRecipient] = useState('@my_personal_account');
   const [selectedDuration, setSelectedDuration] = useState<number>(3);
@@ -24,9 +27,9 @@ export function PremiumPage() {
   ];
 
   const activePlan = plans.find((p) => p.months === selectedDuration) || plans[0]!;
-  const hasInsufficientBalance = currentUser.balanceCents < activePlan.priceCents;
+  const hasInsufficientBalance = wallet.balanceCents < activePlan.priceCents;
 
-  const handleGenerate = (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -42,13 +45,14 @@ export function PremiumPage() {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const codeUrl = `https://t.me/giftcode/sim_${Math.random()
-        .toString(36)
-        .substring(2, 10)
-        .toUpperCase()}`;
+    const codeUrl = `https://t.me/giftcode/sim_${Math.random()
+      .toString(36)
+      .substring(2, 10)
+      .toUpperCase()}`;
 
-      const result = addOrder({
+    try {
+      await orderRepository.placeOrder({
+        userId: currentUser.id,
         serviceId: 'srv_tg_premium_3m',
         serviceName: `Telegram Premium ${activePlan.months}M Gift Code (${recipient})`,
         target: recipient.trim(),
@@ -57,13 +61,12 @@ export function PremiumPage() {
       });
 
       setIsSubmitting(false);
-
-      if (!result.success) {
-        setErrorMessage(result.error || 'Failed to dispatch premium pass.');
-      } else {
-        setGeneratedCode(codeUrl);
-      }
-    }, 450);
+      setGeneratedCode(codeUrl);
+    } catch (err: unknown) {
+      setIsSubmitting(false);
+      const msg = err instanceof Error ? err.message : 'Failed to dispatch premium pass.';
+      setErrorMessage(msg);
+    }
   };
 
   const copyCode = () => {
@@ -93,7 +96,7 @@ export function PremiumPage() {
         <div className="text-right">
           <span className="text-xs text-slate-400">Available:</span>
           <div className="text-xl font-mono font-extrabold text-brand-primary">
-            {formatCents(currentUser.balanceCents)}
+            {formatCents(wallet.balanceCents)}
           </div>
         </div>
       </div>
@@ -193,7 +196,7 @@ export function PremiumPage() {
                   <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>
                     Insufficient balance for this plan ({formatCents(activePlan.priceCents)}{' '}
-                    required, you have {formatCents(currentUser.balanceCents)}).
+                    required, you have {formatCents(wallet.balanceCents)}).
                   </span>
                 </div>
               )}
