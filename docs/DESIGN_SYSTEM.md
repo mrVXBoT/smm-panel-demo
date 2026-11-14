@@ -31,3 +31,16 @@ Keyboard-friendly dialogs, visible focus, contrast-tested text, responsive layou
 
 ## Implementation acceptance
 Present original mascot concepts before committing to final 3D assets. Build functional page structure before animation polish. Mobile, reduced-motion and slow-device fallbacks must work.
+
+## Approved interactive mascot experience (2026-11-14)
+The mascot is a functional part of the demo customer journey, not merely decoration.
+- Idle: subtle breathing/blinking; pointer-follow only when pointer is fine and reduced motion is off.
+- Service hover/selection: mascot acknowledges the category; Stars displays floating coins, Premium displays gift/crown, Boosts displays upward motion, Numbers displays a fictional SIM icon.
+- Order validation: helpful non-blocking feedback; never obscure form fields.
+- Mock checkout success/failure: distinct celebratory/recovery reactions, explicitly labeled DEMO.
+- Loading: short loop with static fallback; avoid blocking the flow.
+- Mobile: tap-driven states, no pointer dependency.
+### Implementation choices
+Motion for standard UI transitions; Rive state machine for original mascot; GSAP ScrollTrigger only for landing story sections. Spline optional and lazy-loaded for one or two hero/product scenes. dotLottie optional for lightweight status icons. Avoid duplicating animation responsibilities.
+### Performance & acceptance
+Lazy-load mascot and 3D assets; static poster fallback; prefers-reduced-motion honored; no layout shifts; animation never blocks keyboard navigation, purchases or readability. Add acceptance tests for state transitions and reduced-motion behavior.
