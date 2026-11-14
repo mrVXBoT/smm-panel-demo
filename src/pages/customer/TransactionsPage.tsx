@@ -95,14 +95,17 @@ export function TransactionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Badge variant="accent" className="mb-2">
-          Append-Only Accounting
+        <Badge
+          variant="outline"
+          className="mb-2 border-sky-500/30 bg-sky-500/10 text-sky-400 text-xs"
+        >
+          Billing History
         </Badge>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Wallet Transactions & Ledger
+          Transaction History
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          TanStack Table accounting ledger tracking immutable credit, charge, and top-up events.
+          Complete record of your wallet top-ups, order charges, and billing activity.
         </p>
       </div>
 

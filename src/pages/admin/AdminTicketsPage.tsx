@@ -8,7 +8,7 @@ export function AdminTicketsPage() {
     {
       id: 'TCK-202',
       customer: 'Alex Rivers (demouser)',
-      subject: 'Virtual numbers availability for test German carrier',
+      subject: 'Bulk Telegram Stars bundle inquiry',
       status: 'open',
       priority: 'high',
       created: '15 min ago',
@@ -16,7 +16,7 @@ export function AdminTicketsPage() {
     {
       id: 'TCK-201',
       customer: 'Alex Rivers (demouser)',
-      subject: 'Inquiry regarding Telegram Stars simulation rate',
+      subject: 'Inquiry regarding Telegram Stars processing time',
       status: 'resolved',
       priority: 'normal',
       created: '2 hours ago',
@@ -35,7 +35,7 @@ export function AdminTicketsPage() {
             <span>Support Ticket Queue</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Simulate administrative replies and resolution workflows.
+            Review and resolve customer inquiries and support requests.
           </p>
         </div>
       </div>

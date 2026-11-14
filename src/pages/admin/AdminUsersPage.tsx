@@ -16,16 +16,16 @@ export function AdminUsersPage() {
             Identity Directory
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Demo Users & Personas
+            User Directory
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Overview of seeded customer and operator identities in the simulation.
+            Overview of registered customer and administrative user profiles.
           </p>
         </div>
 
         <Button size="sm" className="gap-2 text-xs">
           <UserPlus className="w-4 h-4" />
-          <span>Add Demo Persona</span>
+          <span>Add User Profile</span>
         </Button>
       </div>
 
@@ -38,7 +38,7 @@ export function AdminUsersPage() {
                 <th className="py-3 px-4">Username</th>
                 <th className="py-3 px-4">Email</th>
                 <th className="py-3 px-4">Role</th>
-                <th className="py-3 px-4">Simulated Balance</th>
+                <th className="py-3 px-4">Account Balance</th>
                 <th className="py-3 px-4 text-right">Status</th>
               </tr>
             </thead>

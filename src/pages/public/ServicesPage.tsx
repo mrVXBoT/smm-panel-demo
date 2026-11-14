@@ -72,7 +72,7 @@ export function ServicesPage() {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search demo services..."
+            placeholder="Search services..."
             className="pl-10 text-xs"
           />
         </div>
@@ -124,8 +124,8 @@ export function ServicesPage() {
                 </div>
 
                 <Link to={`/app/order/new?service=${service.id}`}>
-                  <Button size="sm" className="gap-1.5">
-                    <span>Order (Demo)</span>
+                  <Button size="sm" className="gap-1.5 font-semibold cursor-pointer">
+                    <span>Order Now</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </Link>

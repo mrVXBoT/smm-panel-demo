@@ -28,7 +28,7 @@ export function AdminServicesPage() {
             Manage Service Catalog
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Toggle availability, edit simulated rates, and configure category visibility.
+            Configure service availability, rates, and category visibility.
           </p>
         </div>
 

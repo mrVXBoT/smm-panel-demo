@@ -34,16 +34,16 @@ export function AdminPaymentsPage() {
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
             <CreditCard className="w-7 h-7 text-brand-primary" />
-            <span>Simulated Payment Ledger</span>
+            <span>Payment Records & Settlement</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Audit simulated Visa/Mastercard attempts, idempotency keys, and test authorizations.
+            Audit payment attempts, transaction references, and settlement records.
           </p>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-emerald-400">
           <ShieldCheck className="w-4 h-4" />
-          <span>Fictional Identifiers Enforced</span>
+          <span>Audit Logging Active</span>
         </div>
       </div>
 

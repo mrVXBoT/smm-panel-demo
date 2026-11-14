@@ -7,14 +7,14 @@ export function SupportPage() {
   const tickets = [
     {
       id: 'TCK-201',
-      subject: 'Inquiry regarding Telegram Stars simulation rate',
+      subject: 'Inquiry regarding Telegram Stars processing rate',
       status: 'resolved',
       updatedAt: '2 hours ago',
       messagesCount: 3,
     },
     {
       id: 'TCK-202',
-      subject: 'Virtual numbers availability for test German carrier',
+      subject: 'Custom channel package request for high-volume delivery',
       status: 'open',
       updatedAt: '15 min ago',
       messagesCount: 1,
@@ -25,14 +25,17 @@ export function SupportPage() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="accent" className="mb-2">
-            Simulated Helpdesk
+          <Badge
+            variant="outline"
+            className="mb-2 border-sky-500/30 bg-sky-500/10 text-sky-400 text-xs"
+          >
+            Client Helpdesk
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Customer Support Tickets
+            Customer Support
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Simulate customer assistance requests and mock operator replies.
+            Submit questions or request assistance regarding your Telegram orders.
           </p>
         </div>
 

@@ -13,10 +13,10 @@ export function AdminSettingsPage() {
         </Badge>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
           <Settings className="w-7 h-7 text-brand-primary" />
-          <span>Platform Settings & Seed Management</span>
+          <span>Platform Settings & Maintenance</span>
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Reset test state, verify simulation guards, and review deployment configuration.
+          Configure platform preferences, manage database seed state, and review system status.
         </p>
       </div>
 
@@ -25,12 +25,12 @@ export function AdminSettingsPage() {
           <div className="space-y-4">
             <h3 className="font-bold text-base text-white flex items-center gap-2">
               <RefreshCw className="w-4 h-4 text-brand-primary" />
-              <span>Demo State Reset</span>
+              <span>Database State Reset</span>
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Restores the customer balance back to the official client seed of{' '}
+              Restores the customer balance back to the official seed of{' '}
               <strong className="text-white">$87.00 (8,700 cents)</strong> and reinitializes all
-              mock orders and simulated ledger entries.
+              orders and ledger entries.
             </p>
             <div>
               <Button
@@ -40,7 +40,7 @@ export function AdminSettingsPage() {
                 className="gap-2 text-xs"
               >
                 <RefreshCw className="w-4 h-4" />
-                <span>Re-seed Simulation ($87.00)</span>
+                <span>Reset Database ($87.00)</span>
               </Button>
             </div>
           </div>

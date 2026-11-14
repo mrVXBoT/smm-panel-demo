@@ -81,22 +81,25 @@ export function PremiumPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="accent" className="mb-2">
-            Subscription Simulator
+          <Badge
+            variant="outline"
+            className="mb-2 border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs"
+          >
+            Official Subscriptions
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <span>Telegram Premium Simulator</span>
+            <span>Telegram Premium Gift Activation</span>
             <Crown className="w-6 h-6 text-purple-400" />
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Generate simulated Telegram Premium gift links and test checkout deduction.
+            Official gift code pass for Telegram Premium subscriptions with instant link activation.
           </p>
         </div>
 
         <div className="text-right">
           <span className="text-xs text-slate-400">Available:</span>
           <div className="text-xl font-mono font-extrabold text-brand-primary">
-            {formatCents(wallet.balanceCents)}
+            {wallet.isLoading ? '...' : formatCents(wallet.balanceCents)}
           </div>
         </div>
       </div>
@@ -108,7 +111,7 @@ export function PremiumPage() {
               <CheckCircle className="w-6 h-6" />
             </div>
             <h2 className="text-xl font-bold text-white">
-              {activePlan.label} Simulated Link Generated!
+              {activePlan.label} Gift Link Generated!
             </h2>
             <div className="p-3 bg-slate-900/90 border border-purple-500/40 rounded-xl font-mono text-xs text-purple-300 max-w-md mx-auto flex items-center justify-between gap-2">
               <span className="truncate">{generatedCode}</span>

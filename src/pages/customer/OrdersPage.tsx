@@ -113,7 +113,7 @@ export function OrdersPage() {
             Order History
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            TanStack Table data grid with sorting, search filtering, and Dexie persistent storage.
+            Track the status, delivery details, and receipts for all your Telegram orders.
           </p>
         </div>
 

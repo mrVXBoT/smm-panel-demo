@@ -14,14 +14,17 @@ export function ProfilePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <Badge variant="accent" className="mb-2">
-          Demo Identity
+        <Badge
+          variant="outline"
+          className="mb-2 border-sky-500/30 bg-sky-500/10 text-sky-400 text-xs"
+        >
+          Account Profile
         </Badge>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Demo Profile & Settings
+          Profile & Account Settings
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Review demo persona properties, simulated API tokens, and persistence controls.
+          Manage your user profile details, API credentials, and preferences.
         </p>
       </div>
 

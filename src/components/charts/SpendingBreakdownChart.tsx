@@ -7,10 +7,9 @@ interface BreakdownItem {
 }
 
 const DEFAULT_BREAKDOWN: BreakdownItem[] = [
-  { name: 'Telegram Growth', value: 42, color: '#38BDF8' },
-  { name: 'Telegram Stars', value: 24, color: '#F59E0B' },
-  { name: 'Telegram Premium', value: 18, color: '#A78BFA' },
-  { name: 'Virtual Numbers', value: 16, color: '#22C55E' },
+  { name: 'Channel Growth', value: 50, color: '#38BDF8' },
+  { name: 'Telegram Stars', value: 30, color: '#F59E0B' },
+  { name: 'Telegram Premium', value: 20, color: '#A78BFA' },
 ];
 
 export function SpendingBreakdownChart({ data = DEFAULT_BREAKDOWN }: { data?: BreakdownItem[] }) {

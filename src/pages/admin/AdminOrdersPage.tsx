@@ -122,8 +122,7 @@ export function AdminOrdersPage() {
             <span>All Customer Orders</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            TanStack Table operator dashboard with sorting, search filtering, and state
-            manipulation.
+            Manage and update order fulfillment statuses across the platform.
           </p>
         </div>
       </div>

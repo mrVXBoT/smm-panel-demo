@@ -20,30 +20,30 @@ export function AdminDashboardPage() {
 
   const stats = [
     {
-      label: 'Simulated Order Volume',
+      label: 'Total Revenue',
       value: formatCents(liveStats?.totalRevenueCents ?? 215),
-      change: '+18.2%',
+      change: '+18.2% this week',
       icon: TrendingUp,
       color: 'text-emerald-400',
     },
     {
-      label: 'Active Catalog Services',
+      label: 'Active Services',
       value: (liveStats?.activeServicesCount ?? INITIAL_SERVICES.length).toString(),
       change: '100% operational',
       icon: Layers,
       color: 'text-brand-primary',
     },
     {
-      label: 'Demo User Accounts',
+      label: 'Active Users',
       value: (liveStats?.activeUsersCount ?? 2).toString(),
-      change: 'Customer + Admin',
+      change: 'Verified clients',
       icon: Users,
       color: 'text-brand-accent',
     },
     {
-      label: 'Total Orders Logged',
+      label: 'Total Orders',
       value: (liveStats?.totalOrders ?? 2).toString(),
-      change: 'Dexie Live Records',
+      change: 'Processed queue',
       icon: CreditCard,
       color: 'text-purple-400',
     },

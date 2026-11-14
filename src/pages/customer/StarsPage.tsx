@@ -68,22 +68,25 @@ export function StarsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="accent" className="mb-2">
-            Digital Goods Simulation
+          <Badge
+            variant="outline"
+            className="mb-2 border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs"
+          >
+            Telegram Digital Assets
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <span>Telegram Stars Transfer Simulator</span>
+            <span>Telegram Stars Gift & Top-Up</span>
             <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Simulate Telegram Stars gifts and mini-app payments with instant balance deduction.
+            Instant delivery to any bot, channel, or recipient Telegram username.
           </p>
         </div>
 
         <div className="text-right">
           <span className="text-xs text-slate-400">Available:</span>
           <div className="text-xl font-mono font-extrabold text-brand-primary">
-            {formatCents(wallet.balanceCents)}
+            {wallet.isLoading ? '...' : formatCents(wallet.balanceCents)}
           </div>
         </div>
       </div>
@@ -98,11 +101,11 @@ export function StarsPage() {
               {selectedPack} Stars Transferred to {recipient}!
             </h2>
             <p className="text-xs text-slate-300 max-w-md mx-auto">
-              Simulated gift receipt recorded under Order #{successOrderId}. Charged{' '}
+              Gift receipt recorded under Order #{successOrderId}. Charged{' '}
               <span className="font-mono text-amber-400 font-bold">
                 {formatCents(activePack.priceCents)}
               </span>{' '}
-              to your demo balance.
+              to your account.
             </p>
             <Button
               variant="default"

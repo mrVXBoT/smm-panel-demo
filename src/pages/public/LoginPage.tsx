@@ -76,10 +76,10 @@ export function LoginPage() {
           </div>
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Demo Platform Sign In
+          Sign In to NovaSMM
         </h1>
         <p className="mt-2 text-xs text-slate-400">
-          Strictly validated demo accounts. Choose a pre-configured profile or type below.
+          Select an account persona below or enter your credentials.
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export function LoginPage() {
           {/* Quick Profile Selectors */}
           <div className="mb-6 space-y-2">
             <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Select Demo Account (One-Click Fill)
+              Select Account Profile
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button

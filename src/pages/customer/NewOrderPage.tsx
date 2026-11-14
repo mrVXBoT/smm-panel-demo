@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ShoppingCart, CheckCircle, ArrowRight, AlertTriangle, Wallet } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowRight, AlertTriangle, Wallet, Zap } from 'lucide-react';
 import { INITIAL_CATEGORIES } from '../../core/fixtures/categories';
 import { INITIAL_SERVICES } from '../../core/fixtures/services';
 import { formatCents } from '../../core/utils/currency';
@@ -96,7 +96,7 @@ export function NewOrderPage() {
 
   const onSubmit = async (data: OrderFormData) => {
     if (hasInsufficientBalance) {
-      toast.error('Insufficient demo balance. Please top up your wallet.');
+      toast.error('Insufficient balance. Please top up your wallet.');
       return;
     }
 
@@ -122,14 +122,17 @@ export function NewOrderPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="accent" className="mb-2">
-            React Hook Form + Zod Validated
+          <Badge
+            variant="outline"
+            className="mb-2 border-sky-500/30 bg-sky-500/10 text-sky-400 text-xs"
+          >
+            Direct Ordering
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Create New Demo Order
+            New Telegram Order
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Dynamic schema validation with minimum/maximum quantity enforcement and instant preview.
+            Select service, specify your target channel or username, and order instantly.
           </p>
         </div>
 
@@ -148,15 +151,14 @@ export function NewOrderPage() {
               <CheckCircle className="w-6 h-6" />
             </div>
             <h2 className="text-xl font-bold text-white">
-              Demo Order #{createdOrderId} Successfully Dispatched!
+              Order #{createdOrderId} Placed Successfully!
             </h2>
             <p className="text-xs text-slate-300 max-w-md mx-auto">
-              Deducted{' '}
+              Charged{' '}
               <strong className="font-mono text-emerald-400">
                 {formatCents(computedTotalCents)}
               </strong>{' '}
-              from your persisted balance. The order is stored in Dexie/Local storage and will
-              persist across refreshes.
+              to your account. Your order has been dispatched to the automated fulfillment queue.
             </p>
             <div className="flex justify-center gap-3 pt-4">
               <Button
@@ -166,7 +168,7 @@ export function NewOrderPage() {
                   setCreatedOrderId(null);
                   reset();
                 }}
-                className="cursor-pointer"
+                className="cursor-pointer font-semibold"
               >
                 Place Another Order
               </Button>
@@ -247,7 +249,7 @@ export function NewOrderPage() {
                     </span>
                   ) : (
                     <span className="text-[11px] text-slate-500 mt-1 block">
-                      Zod validated: Enter any test link or public username.
+                      Enter your public channel link (https://t.me/...) or handle (@channel).
                     </span>
                   )}
                 </div>
@@ -257,7 +259,8 @@ export function NewOrderPage() {
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-semibold text-slate-300">Quantity</label>
                     <span className="text-[11px] text-slate-400">
-                      Min: {activeService.minQty || 1} • Max: {activeService.maxQty || 100000}
+                      Min: {activeService.minQty || 1} • Max:{' '}
+                      {(activeService.maxQty || 100000).toLocaleString()}
                     </span>
                   </div>
                   <Input
@@ -282,13 +285,13 @@ export function NewOrderPage() {
                   >
                     <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                     <div className="space-y-1">
-                      <div className="font-bold text-rose-200">Insufficient Demo Balance</div>
+                      <div className="font-bold text-rose-200">Insufficient Balance</div>
                       <div>
                         Required:{' '}
                         <span className="font-mono font-bold">
                           {formatCents(computedTotalCents)}
                         </span>
-                        , but your wallet has{' '}
+                        , but your wallet balance is{' '}
                         <span className="font-mono font-bold">
                           {formatCents(wallet.balanceCents)}
                         </span>
@@ -299,7 +302,7 @@ export function NewOrderPage() {
                         className="inline-flex items-center gap-1 text-brand-primary hover:underline font-semibold mt-1"
                       >
                         <Wallet className="w-3.5 h-3.5" />
-                        <span>Go to Demo Wallet to top up</span>
+                        <span>Go to Wallet to add funds</span>
                       </Link>
                     </div>
                   </div>
@@ -316,7 +319,7 @@ export function NewOrderPage() {
                       ? 'Dispatching Order...'
                       : hasInsufficientBalance
                         ? 'Insufficient Balance — Top Up Required'
-                        : 'Submit Simulated Order'}
+                        : 'Place Order'}
                   </span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
@@ -327,8 +330,11 @@ export function NewOrderPage() {
           {/* Pricing & Service Summary Card */}
           <Card className="h-fit">
             <CardContent className="p-6 space-y-4">
-              <h3 className="font-bold text-sm text-white border-b border-slate-800 pb-3">
-                Order Summary
+              <h3 className="font-bold text-sm text-white border-b border-slate-800 pb-3 flex items-center justify-between">
+                <span>Order Summary</span>
+                <Badge variant="outline" className="text-[10px] text-sky-400 border-sky-500/30">
+                  Instant
+                </Badge>
               </h3>
 
               <div className="space-y-3 text-xs">
@@ -339,8 +345,9 @@ export function NewOrderPage() {
 
                 <div>
                   <span className="text-slate-400">Speed / Delivery:</span>
-                  <div className="text-brand-primary mt-0.5">
-                    {activeService.estimatedDeliveryLabel}
+                  <div className="text-brand-primary font-medium mt-0.5 flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>{activeService.estimatedDeliveryLabel}</span>
                   </div>
                 </div>
 
@@ -360,8 +367,8 @@ export function NewOrderPage() {
               </div>
 
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 leading-relaxed">
-                Orders are executed in sandbox mode. Balances adjust persistently in browser storage
-                without touching real payment cards.
+                Orders are dispatched immediately to the automated fulfillment queue. No password or
+                admin access required.
               </div>
             </CardContent>
           </Card>

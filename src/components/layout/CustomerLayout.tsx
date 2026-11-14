@@ -1,12 +1,10 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { DemoWatermark } from './DemoWatermark';
 
 export function CustomerLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-brand-bg-dark text-brand-text-dark">
-      <DemoWatermark />
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar mode="customer" />
