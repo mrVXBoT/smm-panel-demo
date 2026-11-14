@@ -1,50 +1,17 @@
-import { useState } from 'react';
-import { Filter } from 'lucide-react';
+import { ListOrdered } from 'lucide-react';
+import { useAppStore } from '../../app/store';
+import { INITIAL_SERVICES } from '../../core/fixtures/services';
 import { formatCents } from '../../core/utils/currency';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 
 export function AdminOrdersPage() {
-  const [orders, setOrders] = useState([
-    {
-      id: 'ORD-8921',
-      user: 'demouser (Alex Rivers)',
-      service: 'Telegram Real HQ Subscribers',
-      target: '@growth_channel_demo',
-      quantity: 1000,
-      chargeCents: 140,
-      status: 'completed',
-      date: '2026-11-12 14:32',
-    },
-    {
-      id: 'ORD-8922',
-      user: 'demouser (Alex Rivers)',
-      service: 'Telegram Post Views [Instant]',
-      target: 'https://t.me/growth_channel_demo/42',
-      quantity: 5000,
-      chargeCents: 75,
-      status: 'processing',
-      date: '2026-11-14 10:15',
-    },
-  ]);
+  const { orders, advanceOrderStatus } = useAppStore();
 
-  const advanceStatus = (id: string) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === id
-          ? {
-              ...o,
-              status:
-                o.status === 'processing'
-                  ? 'completed'
-                  : o.status === 'pending'
-                    ? 'processing'
-                    : 'refunded',
-            }
-          : o,
-      ),
-    );
+  const getServiceName = (serviceId: string) => {
+    const s = INITIAL_SERVICES.find((item) => item.id === serviceId);
+    return s ? s.name : serviceId;
   };
 
   return (
@@ -54,18 +21,14 @@ export function AdminOrdersPage() {
           <Badge variant="accent" className="mb-2">
             Order Lifecycle Management
           </Badge>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            All Customer Orders
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <ListOrdered className="w-7 h-7 text-brand-primary" />
+            <span>All Customer Orders</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Review simulated incoming orders and manually step through status state machines.
+            Review simulated incoming orders and advance their status in the shared state.
           </p>
         </div>
-
-        <Button variant="outline" size="sm" className="gap-2 text-xs">
-          <Filter className="w-3.5 h-3.5" />
-          <span>Filter Pipeline</span>
-        </Button>
       </div>
 
       <Card>
@@ -74,7 +37,6 @@ export function AdminOrdersPage() {
             <thead>
               <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold">
                 <th className="py-3 px-4">Order ID</th>
-                <th className="py-3 px-4">Customer</th>
                 <th className="py-3 px-4">Service</th>
                 <th className="py-3 px-4">Target</th>
                 <th className="py-3 px-4">Qty</th>
@@ -89,8 +51,9 @@ export function AdminOrdersPage() {
                   <td className="py-3.5 px-4 font-mono font-semibold text-brand-primary">
                     {ord.id}
                   </td>
-                  <td className="py-3.5 px-4 text-slate-300 font-medium">{ord.user}</td>
-                  <td className="py-3.5 px-4 text-white">{ord.service}</td>
+                  <td className="py-3.5 px-4 text-white font-medium max-w-xs truncate">
+                    {getServiceName(ord.serviceId)}
+                  </td>
                   <td className="py-3.5 px-4 font-mono text-slate-400 max-w-xs truncate">
                     {ord.target}
                   </td>
@@ -107,7 +70,9 @@ export function AdminOrdersPage() {
                           ? 'success'
                           : ord.status === 'processing'
                             ? 'default'
-                            : 'secondary'
+                            : ord.status === 'pending'
+                              ? 'warning'
+                              : 'danger'
                       }
                       className="capitalize"
                     >
@@ -118,14 +83,21 @@ export function AdminOrdersPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => advanceStatus(ord.id)}
-                      className="text-[11px] h-7 px-2.5 text-brand-primary hover:text-white"
+                      onClick={() => advanceOrderStatus(ord.id)}
+                      className="text-[11px] h-7 px-2.5 text-brand-primary hover:text-white cursor-pointer"
                     >
                       Step State
                     </Button>
                   </td>
                 </tr>
               ))}
+              {orders.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="text-center py-10 text-slate-500">
+                    No orders recorded yet.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </CardContent>

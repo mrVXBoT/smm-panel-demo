@@ -1,48 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Clock } from 'lucide-react';
+import { useAppStore } from '../../app/store';
+import { INITIAL_SERVICES } from '../../core/fixtures/services';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-
-interface MockOrderRow {
-  id: string;
-  serviceName: string;
-  target: string;
-  quantity: number;
-  chargeCents: number;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
-  date: string;
-}
+import type { OrderStatus } from '../../core/types/models';
 
 export function OrdersPage() {
   const [filter, setFilter] = useState<string>('all');
-
-  const orders: MockOrderRow[] = [
-    {
-      id: 'ORD-8921',
-      serviceName: 'Telegram Real HQ Subscribers [Non-Drop]',
-      target: '@growth_channel_demo',
-      quantity: 1000,
-      chargeCents: 140,
-      status: 'completed',
-      date: '2026-11-12 14:32',
-    },
-    {
-      id: 'ORD-8922',
-      serviceName: 'Telegram Post Views [Instant Auto]',
-      target: 'https://t.me/growth_channel_demo/42',
-      quantity: 5000,
-      chargeCents: 75,
-      status: 'processing',
-      date: '2026-11-14 10:15',
-    },
-  ];
+  const { orders } = useAppStore();
 
   const filtered = filter === 'all' ? orders : orders.filter((o) => o.status === filter);
 
-  const getStatusBadge = (status: MockOrderRow['status']) => {
+  const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
       case 'completed':
         return <Badge variant="success">Completed</Badge>;
@@ -56,6 +29,11 @@ export function OrdersPage() {
     }
   };
 
+  const getServiceName = (serviceId: string) => {
+    const s = INITIAL_SERVICES.find((item) => item.id === serviceId);
+    return s ? s.name : serviceId;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -67,12 +45,13 @@ export function OrdersPage() {
             Order History
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Track real-time simulated lifecycle status and execution logs.
+            Track real-time simulated lifecycle status and execution logs. Persisted across page
+            refreshes.
           </p>
         </div>
 
         <Link to="/app/order/new">
-          <Button size="sm" className="gap-2">
+          <Button size="sm" className="gap-2 cursor-pointer">
             <ShoppingCart className="w-4 h-4" />
             <span>New Order</span>
           </Button>
@@ -81,7 +60,7 @@ export function OrdersPage() {
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
-        {['all', 'processing', 'completed', 'pending'].map((st) => (
+        {['all', 'processing', 'completed', 'pending', 'refunded'].map((st) => (
           <button
             key={st}
             onClick={() => setFilter(st)}
@@ -107,7 +86,7 @@ export function OrdersPage() {
                 <th className="py-3 px-4">Quantity</th>
                 <th className="py-3 px-4">Charge</th>
                 <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Date</th>
+                <th className="py-3 px-4">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -117,7 +96,7 @@ export function OrdersPage() {
                     {ord.id}
                   </td>
                   <td className="py-3.5 px-4 font-medium text-white max-w-xs truncate">
-                    {ord.serviceName}
+                    {getServiceName(ord.serviceId)}
                   </td>
                   <td className="py-3.5 px-4 font-mono text-slate-300 max-w-xs truncate">
                     {ord.target}
@@ -131,10 +110,23 @@ export function OrdersPage() {
                   <td className="py-3.5 px-4">{getStatusBadge(ord.status)}</td>
                   <td className="py-3.5 px-4 text-slate-400 flex items-center gap-1.5 whitespace-nowrap">
                     <Clock className="w-3.5 h-3.5 text-slate-500" />
-                    <span>{ord.date}</span>
+                    <span>
+                      {new Date(ord.createdAt).toLocaleDateString()}{' '}
+                      {new Date(ord.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="text-center py-10 text-slate-500">
+                    No orders match the selected status filter.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </CardContent>
