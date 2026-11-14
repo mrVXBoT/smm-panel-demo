@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Star, CheckCircle, ArrowRight } from 'lucide-react';
+import { Sparkles, Star, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../app/store';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
@@ -8,12 +8,13 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 
 export function StarsPage() {
-  const { currentUser, setCurrentUser } = useAppStore();
+  const { currentUser, addOrder } = useAppStore();
 
   const [recipient, setRecipient] = useState('@demo_bot');
   const [selectedPack, setSelectedPack] = useState(50);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
 
   const packs = [
     { stars: 50, priceCents: 110, popular: false },
@@ -24,38 +25,67 @@ export function StarsPage() {
   ];
 
   const activePack = packs.find((p) => p.stars === selectedPack) || packs[0]!;
+  const hasInsufficientBalance = currentUser.balanceCents < activePack.priceCents;
 
   const handlePurchase = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+
+    if (!recipient.trim()) {
+      setErrorMessage('Please enter a recipient handle or bot link.');
+      return;
+    }
+
+    if (hasInsufficientBalance) {
+      setErrorMessage('Insufficient balance to purchase this Stars bundle.');
+      return;
+    }
+
     setIsSubmitting(true);
     setTimeout(() => {
-      if (currentUser.balanceCents >= activePack.priceCents) {
-        setCurrentUser({
-          ...currentUser,
-          balanceCents: currentUser.balanceCents - activePack.priceCents,
-        });
-      }
+      const result = addOrder({
+        serviceId: 'srv_tg_stars_50',
+        serviceName: `${activePack.stars} Telegram Stars Gift (${recipient})`,
+        target: recipient.trim(),
+        quantity: activePack.stars,
+        chargeCents: activePack.priceCents,
+      });
+
       setIsSubmitting(false);
-      setSuccess(true);
-    }, 500);
+
+      if (!result.success) {
+        setErrorMessage(result.error || 'Failed to dispatch stars.');
+      } else if (result.order) {
+        setSuccessOrderId(result.order.id);
+      }
+    }, 450);
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <Badge variant="accent" className="mb-2">
-          Digital Goods Simulation
-        </Badge>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          <span>Telegram Stars Transfer Simulator</span>
-          <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Simulate Telegram Stars gifts and mini-app payments with instant balance deduction.
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <Badge variant="accent" className="mb-2">
+            Digital Goods Simulation
+          </Badge>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <span>Telegram Stars Transfer Simulator</span>
+            <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Simulate Telegram Stars gifts and mini-app payments with instant balance deduction.
+          </p>
+        </div>
+
+        <div className="text-right">
+          <span className="text-xs text-slate-400">Available:</span>
+          <div className="text-xl font-mono font-extrabold text-brand-primary">
+            {formatCents(currentUser.balanceCents)}
+          </div>
+        </div>
       </div>
 
-      {success ? (
+      {successOrderId ? (
         <Card className="border-amber-500/40 bg-amber-950/20 text-center py-10">
           <CardContent className="space-y-4">
             <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
@@ -65,10 +95,18 @@ export function StarsPage() {
               {selectedPack} Stars Transferred to {recipient}!
             </h2>
             <p className="text-xs text-slate-300 max-w-md mx-auto">
-              Simulated gift receipt recorded. Charged {formatCents(activePack.priceCents)} to your
-              demo balance.
+              Simulated gift receipt recorded under Order #{successOrderId}. Charged{' '}
+              <span className="font-mono text-amber-400 font-bold">
+                {formatCents(activePack.priceCents)}
+              </span>{' '}
+              to your demo balance.
             </p>
-            <Button variant="default" size="sm" onClick={() => setSuccess(false)} className="mt-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setSuccessOrderId(null)}
+              className="mt-2 cursor-pointer"
+            >
               Send More Stars
             </Button>
           </CardContent>
@@ -84,7 +122,10 @@ export function StarsPage() {
                 </label>
                 <Input
                   value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
+                  onChange={(e) => {
+                    setRecipient(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                   placeholder="@botusername or @channel"
                   required
                   className="text-xs font-mono"
@@ -101,7 +142,10 @@ export function StarsPage() {
                     <button
                       key={pack.stars}
                       type="button"
-                      onClick={() => setSelectedPack(pack.stars)}
+                      onClick={() => {
+                        setSelectedPack(pack.stars);
+                        setErrorMessage(null);
+                      }}
                       className={`p-4 rounded-xl border text-center transition-all cursor-pointer relative ${
                         selectedPack === pack.stars
                           ? 'border-amber-400 bg-amber-400/10 text-white shadow-lg shadow-amber-400/10'
@@ -125,6 +169,24 @@ export function StarsPage() {
                 </div>
               </div>
 
+              {/* Insufficient balance warning */}
+              {hasInsufficientBalance && (
+                <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>
+                    Insufficient balance for this pack. You have{' '}
+                    {formatCents(currentUser.balanceCents)}, but{' '}
+                    {formatCents(activePack.priceCents)} is required.
+                  </span>
+                </div>
+              )}
+
+              {errorMessage && !hasInsufficientBalance && (
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+                  {errorMessage}
+                </div>
+              )}
+
               <div className="pt-2 flex items-center justify-between border-t border-slate-800">
                 <div>
                   <span className="text-xs text-slate-400">Total Simulated Charge:</span>
@@ -135,11 +197,17 @@ export function StarsPage() {
 
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="gap-2 text-xs font-bold py-5 px-6 rounded-xl"
+                  disabled={isSubmitting || hasInsufficientBalance}
+                  className="gap-2 text-xs font-bold py-5 px-6 rounded-xl cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>{isSubmitting ? 'Simulating Transfer...' : 'Send Stars (Demo)'}</span>
+                  <span>
+                    {isSubmitting
+                      ? 'Simulating Transfer...'
+                      : hasInsufficientBalance
+                        ? 'Insufficient Balance'
+                        : 'Send Stars (Demo)'}
+                  </span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
