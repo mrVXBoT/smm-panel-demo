@@ -1,21 +1,20 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MockWalletService } from './services/walletService';
+import { walletService } from './services/walletService';
+import { useAppStore } from '../../app/store';
 
-describe('MockWalletService & Ledger Accounting', () => {
-  let service: MockWalletService;
-
+describe('Unified MockWalletService & Ledger Accounting', () => {
   beforeEach(() => {
-    service = new MockWalletService();
+    useAppStore.getState().resetDemoData();
   });
 
-  it('calculates initial customer wallet balance from ledger as 8,700 cents ($87.00)', async () => {
-    const wallet = await service.getWallet('usr_demo_customer_01');
+  it('calculates initial customer wallet balance from store as 8,700 cents ($87.00)', async () => {
+    const wallet = await walletService.getWallet('usr_demo_customer_01');
     expect(wallet.balanceCents).toBe(8700);
     expect(wallet.currency).toBe('USD');
   });
 
   it('adds simulated top-up credit and appends to ledger', async () => {
-    const result = await service.simulateTopUp({
+    const result = await walletService.simulateTopUp({
       userId: 'usr_demo_customer_01',
       amountCents: 2500, // $25.00
       method: 'visa_demo',
@@ -27,12 +26,12 @@ describe('MockWalletService & Ledger Accounting', () => {
     expect(result.ledgerEntry).toBeDefined();
     expect(result.ledgerEntry?.amountCents).toBe(2500);
 
-    const ledger = await service.getLedger('usr_demo_customer_01');
-    expect(ledger.length).toBeGreaterThanOrEqual(2);
+    const ledger = await walletService.getLedger('usr_demo_customer_01');
+    expect(ledger[0]?.amountCents).toBe(2500);
   });
 
   it('does not credit balance on simulated failed payment', async () => {
-    const result = await service.simulateTopUp({
+    const result = await walletService.simulateTopUp({
       userId: 'usr_demo_customer_01',
       amountCents: 5000,
       method: 'mastercard_demo',
@@ -46,13 +45,13 @@ describe('MockWalletService & Ledger Accounting', () => {
 
   it('resets wallet balance back to initial seed of 8,700 cents', async () => {
     // Add extra funds first
-    await service.simulateTopUp({
+    await walletService.simulateTopUp({
       userId: 'usr_demo_customer_01',
       amountCents: 5000,
       method: 'visa_demo',
     });
 
-    const resetWallet = await service.resetWallet('usr_demo_customer_01');
+    const resetWallet = await walletService.resetWallet('usr_demo_customer_01');
     expect(resetWallet.balanceCents).toBe(8700);
   });
 });

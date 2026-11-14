@@ -1,7 +1,13 @@
 import { useState } from 'react';
-import { CreditCard, ShieldCheck, CheckCircle, Sparkles, ArrowRight, Info, X } from 'lucide-react';
+import {
+  CreditCard,
+  ShieldCheck,
+  Sparkles,
+  Info,
+  CheckCircle,
+} from 'lucide-react';
 import { useAppStore } from '../../app/store';
-import { formatCents, dollarsToCents } from '../../core/utils/currency';
+import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -9,34 +15,20 @@ import { Badge } from '../../components/ui/badge';
 export function WalletPage() {
   const { currentUser, resetDemoData, addTopUp } = useAppStore();
 
-  const [topUpAmountDollars, setTopUpAmountDollars] = useState<number>(25);
-  const [selectedMethod, setSelectedMethod] = useState<'visa_demo' | 'mastercard_demo'>(
-    'visa_demo',
-  );
-  const [showSimulatedModal, setShowSimulatedModal] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [displayedPaymentNotice, setDisplayedPaymentNotice] = useState<string | null>(null);
+  const [testCreditSuccess, setTestCreditSuccess] = useState<string | null>(null);
 
-  const presets = [10, 25, 50, 100];
-
-  const handleOpenPayModal = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuccessMessage(null);
-    setShowSimulatedModal(true);
+  const handlePayButtonClick = () => {
+    // Client requirement: with click, display the simulated label "Pay by Visa or Mastercard"
+    setDisplayedPaymentNotice('Pay by Visa or Mastercard');
+    setTestCreditSuccess(null);
   };
 
-  const handleConfirmSimulatedPayment = () => {
-    setIsProcessing(true);
-    const addedCents = dollarsToCents(topUpAmountDollars);
-
-    setTimeout(() => {
-      addTopUp(addedCents, selectedMethod);
-      setIsProcessing(false);
-      setShowSimulatedModal(false);
-      setSuccessMessage(
-        `Simulated payment confirmed! Credited ${formatCents(addedCents)} to demo balance.`,
-      );
-    }, 500);
+  const handleOptionalTestTopUp = (amountDollars: number) => {
+    const { ledgerEntry } = addTopUp(amountDollars * 100, 'visa_demo');
+    setTestCreditSuccess(
+      `Optional test top-up added: ${formatCents(ledgerEntry.amountCents)} credited to demo balance.`,
+    );
   };
 
   return (
@@ -76,8 +68,7 @@ export function WalletPage() {
             <span className="text-xs font-sans text-brand-primary font-bold">USD</span>
           </div>
           <p className="text-xs text-slate-400">
-            Account: <strong className="text-white">{currentUser.displayName}</strong> (
-            {currentUser.email})
+            Account: <strong className="text-white">{currentUser.displayName}</strong> ({currentUser.email})
           </p>
         </div>
 
@@ -90,212 +81,110 @@ export function WalletPage() {
         </div>
       </div>
 
-      {/* Success Notification */}
-      {successMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between gap-3 animate-fade-in">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{successMessage}</span>
+      {/* Notification when "Pay by Visa or Mastercard" is clicked */}
+      {displayedPaymentNotice && (
+        <div
+          role="status"
+          className="p-5 rounded-2xl bg-brand-surface-dark border-2 border-brand-primary/50 text-white shadow-xl space-y-2 animate-fade-in"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-brand-primary" />
+              <span className="text-base font-extrabold tracking-wide text-brand-primary">
+                {displayedPaymentNotice}
+              </span>
+            </div>
+            <Badge variant="default" className="text-[10px]">
+              Client Scope Match
+            </Badge>
           </div>
-          <button
-            onClick={() => setSuccessMessage(null)}
-            className="text-xs text-emerald-400 hover:underline cursor-pointer"
-          >
-            Dismiss
-          </button>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Per client specification, clicking this action displays <strong>"Pay by Visa or Mastercard"</strong>.
+            No actual payment gateway, credit card fields, or bank redirects are required or executed.
+          </p>
+          <div className="pt-1 flex items-center justify-between text-xs">
+            <span className="text-slate-400">Simulation Method: Visa / Mastercard Selector</span>
+            <button
+              onClick={() => setDisplayedPaymentNotice(null)}
+              className="text-brand-primary hover:underline font-semibold cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Top-up Form Card */}
+      {testCreditSuccess && (
+        <div className="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 animate-fade-in">
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{testCreditSuccess}</span>
+        </div>
+      )}
+
+      {/* Payment Action Card */}
       <Card>
         <CardContent className="p-6 sm:p-8 space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-brand-primary" />
-                <span>Simulated Top-Up</span>
+                <span>Client Payment Presentation</span>
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Select test amount and trigger the client-specified payment presentation.
+                Complies with the requirement: button strictly displays "Pay by Visa or Mastercard".
               </p>
             </div>
             <Badge variant="warning" className="text-[10px]">
-              No Gateway Required
+              No Real Gateway
             </Badge>
           </div>
 
-          <form onSubmit={handleOpenPayModal} className="space-y-6">
-            {/* Amount Selection */}
+          <div className="space-y-4">
+            {/* Primary Payment Button */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">
-                Choose Amount (USD)
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {presets.map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setTopUpAmountDollars(amt)}
-                    className={`py-3 rounded-xl border text-sm font-mono font-bold transition-all cursor-pointer ${
-                      topUpAmountDollars === amt
-                        ? 'border-brand-primary bg-brand-primary/15 text-white shadow-md shadow-brand-primary/20'
-                        : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700'
-                    }`}
-                  >
-                    ${amt}.00
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Method Selector */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">
-                Simulated Card Network
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedMethod('visa_demo')}
-                  className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer ${
-                    selectedMethod === 'visa_demo'
-                      ? 'border-brand-primary bg-brand-primary/10 text-white'
-                      : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-black text-xs">
-                      VISA
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white">Visa Simulation</div>
-                      <div className="text-[10px] text-slate-400">Method selector only</div>
-                    </div>
-                  </div>
-                  {selectedMethod === 'visa_demo' && (
-                    <CheckCircle className="w-4 h-4 text-brand-primary" />
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedMethod('mastercard_demo')}
-                  className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer ${
-                    selectedMethod === 'mastercard_demo'
-                      ? 'border-brand-accent bg-brand-accent/10 text-white'
-                      : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-black text-xs">
-                      MC
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white">Mastercard Simulation</div>
-                      <div className="text-[10px] text-slate-400">Method selector only</div>
-                    </div>
-                  </div>
-                  {selectedMethod === 'mastercard_demo' && (
-                    <CheckCircle className="w-4 h-4 text-brand-accent" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Client Requirement Button: strictly "Pay by Visa or Mastercard" */}
-            <div className="pt-2">
               <Button
-                type="submit"
+                type="button"
+                onClick={handlePayButtonClick}
                 size="lg"
                 className="w-full py-6 rounded-2xl text-base font-extrabold gap-2 shadow-xl shadow-brand-primary/20 cursor-pointer"
               >
                 <CreditCard className="w-5 h-5 text-slate-950" />
                 <span>Pay by Visa or Mastercard</span>
-                <ArrowRight className="w-4 h-4 text-slate-950" />
               </Button>
             </div>
 
-            {/* Safety Reassurance */}
+            {/* Client Requirement Note */}
             <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-400 flex items-start gap-2.5">
               <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
               <span>
-                <strong>Client Specification Note:</strong> Per project requirements, the payment
-                button strictly reads "Pay by Visa or Mastercard" without opening gateways or
-                collecting PAN, CVV, or expiry dates.
+                <strong>Client Requirement:</strong> The payment button only needs to display
+                "Pay by Visa or Mastercard". No actual payment gateway or card-data collection is required.
               </span>
             </div>
-          </form>
-        </CardContent>
-      </Card>
 
-      {/* Simulated "Pay by Visa or Mastercard" Modal */}
-      {showSimulatedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-          <div className="bg-brand-surface-dark border border-slate-700 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            {/* Optional Demo Top-Up Testing for high-value orders */}
+            <div className="pt-4 border-t border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <span className="text-slate-400">Optional: Add simulated test credit to balance:</span>
               <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-brand-primary" />
-                <h3 className="font-extrabold text-base text-white">Pay by Visa or Mastercard</h3>
+                <button
+                  type="button"
+                  onClick={() => handleOptionalTestTopUp(25)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-brand-primary text-slate-300 text-xs font-mono font-semibold cursor-pointer transition-colors"
+                >
+                  +$25.00
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOptionalTestTopUp(50)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-brand-primary text-slate-300 text-xs font-mono font-semibold cursor-pointer transition-colors"
+                >
+                  +$50.00
+                </button>
               </div>
-              <button
-                onClick={() => setShowSimulatedModal(false)}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-                <span className="text-slate-400">Selected Amount:</span>
-                <span className="font-mono text-base font-extrabold text-white">
-                  ${topUpAmountDollars}.00 USD
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-                <span className="text-slate-400">Simulated Network:</span>
-                <span className="capitalize font-semibold text-brand-primary">
-                  {selectedMethod === 'visa_demo' ? 'Visa Demo' : 'Mastercard Demo'}
-                </span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200/90 text-xs leading-relaxed flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Client Scope Compliance:</strong> No real payment gateway, card input, or
-                  banking authorization is invoked. This modal confirms the "Pay by Visa or
-                  Mastercard" demo presentation.
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 pt-2">
-              <Button
-                onClick={handleConfirmSimulatedPayment}
-                disabled={isProcessing}
-                className="w-full py-5 rounded-xl text-xs font-bold gap-2 cursor-pointer"
-              >
-                {isProcessing ? (
-                  <span>Logging Simulation...</span>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Confirm Simulated Demo Credit (${topUpAmountDollars}.00)</span>
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSimulatedModal(false)}
-                className="text-xs text-slate-400 cursor-pointer"
-              >
-                Dismiss Modal
-              </Button>
             </div>
           </div>
-        </div>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

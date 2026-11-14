@@ -1,34 +1,21 @@
 import type { LedgerEntry, PaymentAttempt, Wallet } from '../../../core/types/models';
 import type { IWalletService, SimulatePaymentParams } from '../../../core/types/services';
+import { useAppStore } from '../../../app/store';
 
 export class MockWalletService implements IWalletService {
-  private ledgers: Record<string, LedgerEntry[]> = {
-    usr_demo_customer_01: [
-      {
-        id: 'led_init_01',
-        walletId: 'wal_demo_01',
-        amountCents: 8700,
-        kind: 'top_up',
-        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-        description: 'Initial demo balance credit (Simulated)',
-      },
-    ],
-  };
-
   async getWallet(userId: string): Promise<Wallet> {
-    const ledger = this.ledgers[userId] || [];
-    const balanceCents = ledger.reduce((sum, entry) => sum + entry.amountCents, 0);
-
+    const store = useAppStore.getState();
     return {
       id: `wal_${userId}`,
       userId,
       currency: 'USD',
-      balanceCents,
+      balanceCents: store.currentUser.balanceCents,
     };
   }
 
-  async getLedger(userId: string): Promise<LedgerEntry[]> {
-    return [...(this.ledgers[userId] || [])].reverse();
+  async getLedger(_userId: string): Promise<LedgerEntry[]> {
+    const store = useAppStore.getState();
+    return [...store.ledgerEntries];
   }
 
   async simulateTopUp(params: SimulatePaymentParams): Promise<{
@@ -37,38 +24,23 @@ export class MockWalletService implements IWalletService {
     ledgerEntry?: LedgerEntry;
   }> {
     const shouldSucceed = params.shouldSucceed ?? true;
-    const paymentId = `pay_${Date.now()}`;
-    const idempotencyKey = `idem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const store = useAppStore.getState();
 
-    const payment: PaymentAttempt = {
-      id: paymentId,
-      userId: params.userId,
-      amountCents: params.amountCents,
-      method: params.method,
-      state: shouldSucceed ? 'completed' : 'failed',
-      idempotencyKey,
-      createdAt: new Date().toISOString(),
-    };
-
-    let ledgerEntry: LedgerEntry | undefined;
-
-    if (shouldSucceed) {
-      ledgerEntry = {
-        id: `led_${Date.now()}`,
-        walletId: `wal_${params.userId}`,
-        paymentId,
+    if (!shouldSucceed) {
+      const payment: PaymentAttempt = {
+        id: `PAY-${Date.now()}`,
+        userId: params.userId,
         amountCents: params.amountCents,
-        kind: 'top_up',
+        method: params.method,
+        state: 'failed',
+        idempotencyKey: `idem_${Date.now()}_failed`,
         createdAt: new Date().toISOString(),
-        description: `Simulated ${params.method === 'visa_demo' ? 'Visa' : 'Mastercard'} Top-up`,
       };
-
-      if (!this.ledgers[params.userId]) {
-        this.ledgers[params.userId] = [];
-      }
-      this.ledgers[params.userId]!.push(ledgerEntry);
+      const wallet = await this.getWallet(params.userId);
+      return { payment, wallet };
     }
 
+    const { payment, ledgerEntry } = store.addTopUp(params.amountCents, params.method);
     const wallet = await this.getWallet(params.userId);
 
     return {
@@ -79,16 +51,8 @@ export class MockWalletService implements IWalletService {
   }
 
   async resetWallet(userId: string): Promise<Wallet> {
-    this.ledgers[userId] = [
-      {
-        id: `led_reset_${Date.now()}`,
-        walletId: `wal_${userId}`,
-        amountCents: 8700,
-        kind: 'top_up',
-        createdAt: new Date().toISOString(),
-        description: 'Reset demo balance (Simulated)',
-      },
-    ];
+    const store = useAppStore.getState();
+    store.resetDemoData();
     return this.getWallet(userId);
   }
 }
