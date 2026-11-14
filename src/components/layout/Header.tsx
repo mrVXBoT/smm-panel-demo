@@ -54,11 +54,11 @@ export function Header() {
               <div className="flex flex-col">
                 <span className="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
                   NovaSMM
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-primary/20 text-brand-primary border border-brand-primary/40">
+                  <span className="text-[9px] uppercase font-semibold tracking-wider px-1.5 py-0.2 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
                     DEMO
                   </span>
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium">Simulation Suite</span>
+                <span className="text-[10px] text-slate-400 font-medium">Telegram Store</span>
               </div>
             </Link>
 

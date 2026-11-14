@@ -36,9 +36,9 @@ describe('Unified MockOrderService & Order Lifecycle', () => {
     await expect(
       orderService.createOrder({
         userId: 'usr_demo_customer_01',
-        serviceId: 'srv_yt_views_retention',
-        target: 'https://youtube.com/watch?v=demo1234567',
-        quantity: 50000, // Valid qty (max 100k), total $190.00 exceeds $87.00 balance
+        serviceId: 'srv_tg_premium_12m',
+        target: '@channel_demo_target',
+        quantity: 4, // 4 * $28.99 = $115.96, exceeds $87.00 balance
       }),
     ).rejects.toThrow(/Insufficient balance/i);
 

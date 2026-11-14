@@ -17,15 +17,15 @@ describe('Demo Fixtures Specification Compliance', () => {
     expect(DEMO_CREDENTIALS.admin.username).toBe('admin');
   });
 
-  it('includes required service categories: Telegram growth, numbers, Stars, Premium, Instagram, YouTube, TikTok', () => {
+  it('includes approved Telegram service categories: Telegram growth, Stars, and Premium', () => {
     const slugs = INITIAL_CATEGORIES.map((c) => c.slug);
     expect(slugs).toContain('telegram');
     expect(slugs).toContain('telegram_stars');
     expect(slugs).toContain('telegram_premium');
-    expect(slugs).toContain('virtual_numbers');
-    expect(slugs).toContain('instagram');
-    expect(slugs).toContain('youtube');
-    expect(slugs).toContain('tiktok');
+    expect(slugs).not.toContain('virtual_numbers');
+    expect(slugs).not.toContain('instagram');
+    expect(slugs).not.toContain('youtube');
+    expect(slugs).not.toContain('tiktok');
   });
 
   it('initial services use integer minor unit pricing', () => {

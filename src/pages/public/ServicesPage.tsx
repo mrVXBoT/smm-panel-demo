@@ -26,14 +26,14 @@ export function ServicesPage() {
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
         <Badge variant="accent" className="mb-3">
-          Simulated Service Catalog
+          Telegram Services
         </Badge>
         <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-          Explore Social Growth & Digital Services
+          Explore Telegram Growth & Digital Products
         </h1>
         <p className="mt-3 text-slate-400 text-sm sm:text-base">
-          Browse Telegram Stars, Premium gifts, disposable virtual number simulations, and organic
-          engagement packs.
+          Automated fulfillment for Telegram Stars, official Premium gift passes, and non-drop
+          channel growth services.
         </p>
       </div>
 
