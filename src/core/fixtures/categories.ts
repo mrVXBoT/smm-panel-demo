@@ -1,0 +1,63 @@
+import type { ServiceCategory } from '../types/models';
+
+export const INITIAL_CATEGORIES: ServiceCategory[] = [
+  {
+    id: 'cat_tg_growth',
+    name: 'Telegram Growth',
+    slug: 'telegram',
+    description: 'Channel subscribers, group members, post views and active reactions.',
+    icon: 'Send',
+    displayOrder: 1,
+    badge: 'Popular',
+  },
+  {
+    id: 'cat_tg_stars',
+    name: 'Telegram Stars',
+    slug: 'telegram_stars',
+    description: 'Instant gift stars for bots, digital goods, and mini apps monetization.',
+    icon: 'Sparkles',
+    displayOrder: 2,
+    badge: 'Hot',
+  },
+  {
+    id: 'cat_tg_premium',
+    name: 'Telegram Premium',
+    slug: 'telegram_premium',
+    description: 'Gift subscriptions (3, 6, 12 months) activated via test handles.',
+    icon: 'Crown',
+    displayOrder: 3,
+  },
+  {
+    id: 'cat_virtual_numbers',
+    name: 'Virtual Numbers (Simulation)',
+    slug: 'virtual_numbers',
+    description: 'Fictional disposable numbers for simulated testing across 40+ countries.',
+    icon: 'PhoneCall',
+    displayOrder: 4,
+    badge: 'Demo Only',
+  },
+  {
+    id: 'cat_instagram',
+    name: 'Instagram Growth',
+    slug: 'instagram',
+    description: 'Simulated high-retention followers, reel views, and post likes.',
+    icon: 'Instagram',
+    displayOrder: 5,
+  },
+  {
+    id: 'cat_youtube',
+    name: 'YouTube Engagement',
+    slug: 'youtube',
+    description: 'Simulated high-retention views, organic likes, and watch time hours.',
+    icon: 'Youtube',
+    displayOrder: 6,
+  },
+  {
+    id: 'cat_tiktok',
+    name: 'TikTok Boosts',
+    slug: 'tiktok',
+    description: 'Simulated video views, shares, and real-appearing profile followers.',
+    icon: 'Video',
+    displayOrder: 7,
+  },
+];
