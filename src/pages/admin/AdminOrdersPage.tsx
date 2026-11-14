@@ -1,10 +1,13 @@
+import { useMemo } from 'react';
 import { ListOrdered } from 'lucide-react';
+import type { ColumnDef } from '@tanstack/react-table';
 import { useAppStore } from '../../app/store';
 import { INITIAL_SERVICES } from '../../core/fixtures/services';
 import { formatCents } from '../../core/utils/currency';
-import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { DataTable } from '../../components/ui/data-table';
+import type { Order, OrderStatus } from '../../core/types/models';
 
 export function AdminOrdersPage() {
   const { orders, advanceOrderStatus } = useAppStore();
@@ -13,6 +16,86 @@ export function AdminOrdersPage() {
     const s = INITIAL_SERVICES.find((item) => item.id === serviceId);
     return s ? s.name : serviceId;
   };
+
+  const getStatusBadge = (status: OrderStatus) => {
+    switch (status) {
+      case 'completed':
+        return <Badge variant="success">Completed</Badge>;
+      case 'processing':
+        return <Badge variant="default">Processing</Badge>;
+      case 'pending':
+        return <Badge variant="warning">Pending</Badge>;
+      case 'failed':
+      case 'refunded':
+        return <Badge variant="danger">{status}</Badge>;
+    }
+  };
+
+  const columns = useMemo<ColumnDef<Order>[]>(
+    () => [
+      {
+        accessorKey: 'id',
+        header: 'Order ID',
+        cell: ({ row }) => (
+          <span className="font-mono font-semibold text-brand-primary">{row.original.id}</span>
+        ),
+      },
+      {
+        accessorKey: 'serviceId',
+        header: 'Service',
+        cell: ({ row }) => (
+          <span className="font-medium text-white max-w-xs block truncate">
+            {getServiceName(row.original.serviceId)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'target',
+        header: 'Target',
+        cell: ({ row }) => (
+          <span className="font-mono text-slate-400 max-w-xs block truncate">
+            {row.original.target}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'quantity',
+        header: 'Qty',
+        cell: ({ row }) => (
+          <span className="font-mono text-slate-300">{row.original.quantity.toLocaleString()}</span>
+        ),
+      },
+      {
+        accessorKey: 'chargeCents',
+        header: 'Charge',
+        cell: ({ row }) => (
+          <span className="font-mono font-semibold text-white">
+            {formatCents(row.original.chargeCents)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => getStatusBadge(row.original.status),
+      },
+      {
+        id: 'actions',
+        header: 'Action',
+        cell: ({ row }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => advanceOrderStatus(row.original.id)}
+            className="text-[11px] h-7 px-2.5 text-brand-primary hover:text-white cursor-pointer"
+          >
+            Advance State
+          </Button>
+        ),
+      },
+    ],
+    [advanceOrderStatus],
+  );
 
   return (
     <div className="space-y-6">
@@ -26,82 +109,18 @@ export function AdminOrdersPage() {
             <span>All Customer Orders</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Review simulated incoming orders and advance their status in the shared state.
+            TanStack Table operator dashboard with sorting, search filtering, and state
+            manipulation.
           </p>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold">
-                <th className="py-3 px-4">Order ID</th>
-                <th className="py-3 px-4">Service</th>
-                <th className="py-3 px-4">Target</th>
-                <th className="py-3 px-4">Qty</th>
-                <th className="py-3 px-4">Charge</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Step Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {orders.map((ord) => (
-                <tr key={ord.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-3.5 px-4 font-mono font-semibold text-brand-primary">
-                    {ord.id}
-                  </td>
-                  <td className="py-3.5 px-4 text-white font-medium max-w-xs truncate">
-                    {getServiceName(ord.serviceId)}
-                  </td>
-                  <td className="py-3.5 px-4 font-mono text-slate-400 max-w-xs truncate">
-                    {ord.target}
-                  </td>
-                  <td className="py-3.5 px-4 font-mono text-slate-300">
-                    {ord.quantity.toLocaleString()}
-                  </td>
-                  <td className="py-3.5 px-4 font-mono font-semibold text-white">
-                    {formatCents(ord.chargeCents)}
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <Badge
-                      variant={
-                        ord.status === 'completed'
-                          ? 'success'
-                          : ord.status === 'processing'
-                            ? 'default'
-                            : ord.status === 'pending'
-                              ? 'warning'
-                              : 'danger'
-                      }
-                      className="capitalize"
-                    >
-                      {ord.status}
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => advanceOrderStatus(ord.id)}
-                      className="text-[11px] h-7 px-2.5 text-brand-primary hover:text-white cursor-pointer"
-                    >
-                      Step State
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-              {orders.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="text-center py-10 text-slate-500">
-                    No orders recorded yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+      <DataTable
+        columns={columns}
+        data={orders}
+        searchPlaceholder="Filter all orders by target or service..."
+        searchColumnKey="target"
+      />
     </div>
   );
 }

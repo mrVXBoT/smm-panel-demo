@@ -8,16 +8,21 @@ import {
   TrendingUp,
   Clock,
   ShieldCheck,
+  HelpCircle,
+  PieChart,
 } from 'lucide-react';
 import { useAppStore } from '../../app/store';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { MascotCharacter } from '../../components/mascot/MascotCharacter';
+import { NovaBotRive } from '../../components/mascot/NovaBotRive';
+import { OrderVolumeChart } from '../../components/charts/OrderVolumeChart';
+import { SpendingBreakdownChart } from '../../components/charts/SpendingBreakdownChart';
+import { startDemoTour } from '../../components/ui/tour';
 
 export function DashboardPage() {
-  const { currentUser } = useAppStore();
+  const { currentUser, orders } = useAppStore();
 
   return (
     <div className="space-y-6">
@@ -39,22 +44,31 @@ export function DashboardPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-2">
             <Link to="/app/order/new">
-              <Button size="sm" className="gap-2">
+              <Button size="sm" className="gap-2 cursor-pointer">
                 <ShoppingCart className="w-4 h-4" />
                 <span>Place New Order</span>
               </Button>
             </Link>
             <Link to="/app/wallet">
-              <Button variant="secondary" size="sm" className="gap-2">
+              <Button variant="secondary" size="sm" className="gap-2 cursor-pointer">
                 <Wallet className="w-4 h-4 text-brand-primary" />
                 <span>Manage Wallet</span>
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={startDemoTour}
+              className="gap-2 text-xs border-slate-700 text-slate-300 cursor-pointer"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-brand-primary" />
+              <span>Interactive Tour</span>
+            </Button>
           </div>
         </div>
 
         <div className="shrink-0 flex items-center justify-center">
-          <MascotCharacter size="md" mood="happy" />
+          <NovaBotRive size="md" mood="happy" />
         </div>
       </div>
 
@@ -69,7 +83,7 @@ export function DashboardPage() {
               </div>
               <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Simulated Funds</span>
+                <span>Dexie Persisted</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-brand-primary">
@@ -82,10 +96,12 @@ export function DashboardPage() {
           <CardContent className="p-5 flex items-center justify-between">
             <div>
               <div className="text-xs text-slate-400 font-medium">Total Orders Placed</div>
-              <div className="text-2xl font-extrabold text-white font-mono mt-1">2</div>
+              <div className="text-2xl font-extrabold text-white font-mono mt-1">
+                {orders.length}
+              </div>
               <div className="text-[11px] text-sky-400 mt-1 flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" />
-                <span>1 Processing</span>
+                <span>Active History</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400">
@@ -98,7 +114,9 @@ export function DashboardPage() {
           <CardContent className="p-5 flex items-center justify-between">
             <div>
               <div className="text-xs text-slate-400 font-medium">Spent on Services</div>
-              <div className="text-2xl font-extrabold text-white font-mono mt-1">$2.15</div>
+              <div className="text-2xl font-extrabold text-white font-mono mt-1">
+                {formatCents(orders.reduce((sum, o) => sum + o.chargeCents, 0))}
+              </div>
               <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
                 <span>Demo Ledger</span>
@@ -116,12 +134,53 @@ export function DashboardPage() {
               <div className="text-xs text-slate-400 font-medium">Fictional Numbers</div>
               <div className="text-2xl font-extrabold text-white font-mono mt-1">Ready</div>
               <div className="text-[11px] text-purple-400 mt-1">
-                <span>40+ Countries Available</span>
+                <span>5 Countries Supported</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
               <ShieldCheck className="w-5 h-5" />
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recharts Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="font-bold text-base text-white flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-brand-primary" />
+                  <span>7-Day Simulated Order Velocity</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Daily simulated order count and volume trends rendered with Recharts.
+                </p>
+              </div>
+              <Badge variant="default" className="text-[10px]">
+                Recharts Area
+              </Badge>
+            </div>
+            <OrderVolumeChart />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="font-bold text-base text-white flex items-center gap-2">
+                  <PieChart className="w-4 h-4 text-amber-400" />
+                  <span>Category Breakdown</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">Simulated distribution by product.</p>
+              </div>
+              <Badge variant="secondary" className="text-[10px]">
+                Recharts Pie
+              </Badge>
+            </div>
+            <SpendingBreakdownChart />
           </CardContent>
         </Card>
       </div>

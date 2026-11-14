@@ -1,11 +1,94 @@
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { useMemo } from 'react';
+import { ArrowDownRight, ArrowUpRight, Clock } from 'lucide-react';
+import type { ColumnDef } from '@tanstack/react-table';
 import { useAppStore } from '../../app/store';
 import { formatCents } from '../../core/utils/currency';
-import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { DataTable } from '../../components/ui/data-table';
+import type { LedgerEntry } from '../../core/types/models';
 
 export function TransactionsPage() {
   const { ledgerEntries } = useAppStore();
+
+  const columns = useMemo<ColumnDef<LedgerEntry>[]>(
+    () => [
+      {
+        accessorKey: 'id',
+        header: 'Transaction ID',
+        cell: ({ row }) => (
+          <span className="font-mono font-semibold text-brand-primary">{row.original.id}</span>
+        ),
+      },
+      {
+        accessorKey: 'kind',
+        header: 'Type',
+        cell: ({ row }) => {
+          const isCredit = row.original.amountCents > 0;
+          return isCredit ? (
+            <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+              <ArrowDownRight className="w-3.5 h-3.5" />
+              Credit
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-rose-400 font-semibold">
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              Debit
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'description',
+        header: 'Description',
+        cell: ({ row }) => (
+          <span className="font-medium text-white max-w-sm block truncate">
+            {row.original.description}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'amountCents',
+        header: 'Amount',
+        cell: ({ row }) => {
+          const isCredit = row.original.amountCents > 0;
+          return (
+            <span
+              className={`font-mono font-bold ${isCredit ? 'text-emerald-400' : 'text-slate-300'}`}
+            >
+              {isCredit ? '+' : '-'}
+              {formatCents(Math.abs(row.original.amountCents))}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'orderId',
+        header: 'Reference',
+        cell: ({ row }) => (
+          <span className="font-mono text-slate-400 text-xs">
+            {row.original.orderId || row.original.paymentId || 'INIT-SEED'}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'Timestamp',
+        cell: ({ row }) => (
+          <span className="text-slate-400 flex items-center gap-1.5 whitespace-nowrap">
+            <Clock className="w-3.5 h-3.5 text-slate-500" />
+            <span>
+              {new Date(row.original.createdAt).toLocaleDateString()}{' '}
+              {new Date(row.original.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="space-y-6">
@@ -17,71 +100,16 @@ export function TransactionsPage() {
           Wallet Transactions & Ledger
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Immutable event log tracking all credits, charges, and test transactions. Persisted across
-          page refreshes.
+          TanStack Table accounting ledger tracking immutable credit, charge, and top-up events.
         </p>
       </div>
 
-      <Card>
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold">
-                <th className="py-3 px-4">Transaction ID</th>
-                <th className="py-3 px-4">Type</th>
-                <th className="py-3 px-4">Description</th>
-                <th className="py-3 px-4">Amount</th>
-                <th className="py-3 px-4">Reference</th>
-                <th className="py-3 px-4">Timestamp</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {ledgerEntries.map((tx) => {
-                const isCredit = tx.amountCents > 0;
-                return (
-                  <tr key={tx.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-semibold text-brand-primary">
-                      {tx.id}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      {isCredit ? (
-                        <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                          <ArrowDownRight className="w-3.5 h-3.5" />
-                          Credit
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-rose-400 font-semibold">
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                          Debit
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-white font-medium">{tx.description}</td>
-                    <td
-                      className={`py-3.5 px-4 font-mono font-bold ${
-                        isCredit ? 'text-emerald-400' : 'text-slate-300'
-                      }`}
-                    >
-                      {isCredit ? '+' : '-'}
-                      {formatCents(Math.abs(tx.amountCents))}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-400">
-                      {tx.orderId || tx.paymentId || 'INIT-SEED'}
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-400 whitespace-nowrap">
-                      {new Date(tx.createdAt).toLocaleDateString()}{' '}
-                      {new Date(tx.createdAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+      <DataTable
+        columns={columns}
+        data={ledgerEntries}
+        searchPlaceholder="Filter transactions by description or reference..."
+        searchColumnKey="description"
+      />
     </div>
   );
 }

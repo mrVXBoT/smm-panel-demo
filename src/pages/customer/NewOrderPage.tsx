@@ -1,14 +1,18 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ShoppingCart, CheckCircle, ArrowRight, AlertTriangle, Wallet } from 'lucide-react';
 import { INITIAL_CATEGORIES } from '../../core/fixtures/categories';
 import { INITIAL_SERVICES } from '../../core/fixtures/services';
 import { formatCents } from '../../core/utils/currency';
 import { useAppStore } from '../../app/store';
+import { createOrderSchema, type OrderFormData } from '../../core/validation/orderSchema';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
+import { toast } from 'sonner';
 
 export function NewOrderPage() {
   const [searchParams] = useSearchParams();
@@ -21,10 +25,6 @@ export function NewOrderPage() {
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(initialService.categoryId);
   const [selectedServiceId, setSelectedServiceId] = useState<string>(initialService.id);
-  const [targetLink, setTargetLink] = useState('');
-  const [quantity, setQuantity] = useState<number>(initialService.minQty || 100);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderError, setOrderError] = useState<string | null>(null);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
 
   const availableServices = useMemo(() => {
@@ -39,12 +39,41 @@ export function NewOrderPage() {
     );
   }, [selectedServiceId, availableServices]);
 
+  const orderSchema = useMemo(
+    () =>
+      createOrderSchema({
+        minQty: activeService.minQty,
+        maxQty: activeService.maxQty,
+      }),
+    [activeService],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<OrderFormData>({
+    resolver: zodResolver(orderSchema),
+    defaultValues: {
+      categoryId: activeService.categoryId,
+      serviceId: activeService.id,
+      target: '',
+      quantity: activeService.minQty || 100,
+    },
+  });
+
+  const quantity = watch('quantity', activeService.minQty || 100);
+
   const computedTotalCents = useMemo(() => {
+    const qty = Number(quantity) || 0;
     if (activeService.fixedPriceCents) {
-      return activeService.fixedPriceCents * quantity;
+      return activeService.fixedPriceCents * qty;
     }
     if (activeService.pricePerThousandCents) {
-      return Math.round((activeService.pricePerThousandCents * quantity) / 1000);
+      return Math.round((activeService.pricePerThousandCents * qty) / 1000);
     }
     return 0;
   }, [activeService, quantity]);
@@ -53,50 +82,35 @@ export function NewOrderPage() {
 
   const handleCategoryChange = (catId: string) => {
     setSelectedCategoryId(catId);
-    setOrderError(null);
+    setValue('categoryId', catId);
     const firstInCat = INITIAL_SERVICES.find((s) => s.categoryId === catId);
     if (firstInCat) {
       setSelectedServiceId(firstInCat.id);
-      setQuantity(firstInCat.minQty || 1);
+      setValue('serviceId', firstInCat.id);
+      setValue('quantity', firstInCat.minQty || 1);
     }
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    setOrderError(null);
-
-    if (!targetLink.trim()) {
-      setOrderError('Please provide a target channel link or username.');
-      return;
-    }
-
+  const onSubmit = (data: OrderFormData) => {
     if (hasInsufficientBalance) {
-      setOrderError(
-        `Insufficient balance. You have ${formatCents(
-          currentUser.balanceCents,
-        )}, but this order requires ${formatCents(computedTotalCents)}. Please top up your demo wallet.`,
-      );
+      toast.error('Insufficient demo balance. Please top up your wallet.');
       return;
     }
 
-    setIsSubmitting(true);
-    setTimeout(() => {
-      const result = addOrder({
-        serviceId: activeService.id,
-        serviceName: activeService.name,
-        target: targetLink.trim(),
-        quantity,
-        chargeCents: computedTotalCents,
-      });
+    const result = addOrder({
+      serviceId: activeService.id,
+      serviceName: activeService.name,
+      target: data.target.trim(),
+      quantity: Number(data.quantity),
+      chargeCents: computedTotalCents,
+    });
 
-      setIsSubmitting(false);
-
-      if (!result.success) {
-        setOrderError(result.error || 'Failed to place order.');
-      } else if (result.order) {
-        setCreatedOrderId(result.order.id);
-      }
-    }, 400);
+    if (!result.success) {
+      toast.error(result.error || 'Failed to place order.');
+    } else if (result.order) {
+      setCreatedOrderId(result.order.id);
+      toast.success(`Order #${result.order.id} placed successfully!`);
+    }
   };
 
   return (
@@ -104,14 +118,13 @@ export function NewOrderPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <Badge variant="accent" className="mb-2">
-            Simulated Order Dispatcher
+            React Hook Form + Zod Validated
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Create New Demo Order
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Choose a service, specify target link, and preview dynamic pricing with persistent
-            ledger balance.
+            Dynamic schema validation with minimum/maximum quantity enforcement and instant preview.
           </p>
         </div>
 
@@ -137,8 +150,8 @@ export function NewOrderPage() {
               <strong className="font-mono text-emerald-400">
                 {formatCents(computedTotalCents)}
               </strong>{' '}
-              from your persisted balance. The order is now saved in your history and persists
-              across page refreshes.
+              from your persisted balance. The order is stored in Dexie/Local storage and will
+              persist across refreshes.
             </p>
             <div className="flex justify-center gap-3 pt-4">
               <Button
@@ -146,12 +159,18 @@ export function NewOrderPage() {
                 size="sm"
                 onClick={() => {
                   setCreatedOrderId(null);
-                  setTargetLink('');
+                  reset();
                 }}
+                className="cursor-pointer"
               >
                 Place Another Order
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => navigate('/app/orders')}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate('/app/orders')}
+                className="cursor-pointer"
+              >
                 View Order History
               </Button>
             </div>
@@ -162,7 +181,7 @@ export function NewOrderPage() {
           {/* Order Form */}
           <Card className="lg:col-span-2">
             <CardContent className="p-6">
-              <form onSubmit={handlePlaceOrder} className="space-y-5">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 {/* Category Dropdown */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-2">
@@ -190,9 +209,9 @@ export function NewOrderPage() {
                     value={selectedServiceId}
                     onChange={(e) => {
                       setSelectedServiceId(e.target.value);
+                      setValue('serviceId', e.target.value);
                       const s = INITIAL_SERVICES.find((item) => item.id === e.target.value);
-                      if (s) setQuantity(s.minQty || 1);
-                      setOrderError(null);
+                      if (s) setValue('quantity', s.minQty || 1);
                     }}
                     className="w-full h-11 rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary cursor-pointer"
                   >
@@ -213,18 +232,19 @@ export function NewOrderPage() {
                     Target Channel / Post Link / Username
                   </label>
                   <Input
-                    value={targetLink}
-                    onChange={(e) => {
-                      setTargetLink(e.target.value);
-                      if (orderError) setOrderError(null);
-                    }}
+                    {...register('target')}
                     placeholder="e.g. https://t.me/your_channel or @sample_handle"
-                    required
                     className="text-xs"
                   />
-                  <span className="text-[11px] text-slate-500 mt-1 block">
-                    Simulation only: Enter any test link or public username.
-                  </span>
+                  {errors.target ? (
+                    <span className="text-[11px] text-rose-400 mt-1 block">
+                      {errors.target.message}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-slate-500 mt-1 block">
+                      Zod validated: Enter any test link or public username.
+                    </span>
+                  )}
                 </div>
 
                 {/* Quantity */}
@@ -239,14 +259,14 @@ export function NewOrderPage() {
                     type="number"
                     min={activeService.minQty || 1}
                     max={activeService.maxQty || 100000}
-                    value={quantity}
-                    onChange={(e) => {
-                      setQuantity(Number(e.target.value));
-                      if (orderError) setOrderError(null);
-                    }}
+                    {...register('quantity', { valueAsNumber: true })}
                     className="text-xs font-mono"
-                    required
                   />
+                  {errors.quantity && (
+                    <span className="text-[11px] text-rose-400 mt-1 block">
+                      {errors.quantity.message}
+                    </span>
+                  )}
                 </div>
 
                 {/* Insufficient balance warning alert */}
@@ -277,15 +297,6 @@ export function NewOrderPage() {
                         <span>Go to Demo Wallet to top up</span>
                       </Link>
                     </div>
-                  </div>
-                )}
-
-                {orderError && !hasInsufficientBalance && (
-                  <div
-                    role="alert"
-                    className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs"
-                  >
-                    {orderError}
                   </div>
                 )}
 
@@ -330,7 +341,9 @@ export function NewOrderPage() {
 
                 <div>
                   <span className="text-slate-400">Quantity:</span>
-                  <div className="font-mono text-slate-200 mt-0.5">{quantity.toLocaleString()}</div>
+                  <div className="font-mono text-slate-200 mt-0.5">
+                    {(Number(quantity) || 0).toLocaleString()}
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-between">

@@ -39,7 +39,7 @@ export const INITIAL_LEDGER: LedgerEntry[] = [
   {
     id: 'TXN-401',
     walletId: 'wal_usr_demo_customer_01',
-    amountCents: 8700,
+    amountCents: 8915, // 8915 - 140 - 75 = 8700 net balance ($87.00)
     kind: 'top_up',
     createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     description: 'Initial Demo Balance Seed',

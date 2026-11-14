@@ -1,11 +1,5 @@
 import { useState } from 'react';
-import {
-  CreditCard,
-  ShieldCheck,
-  Sparkles,
-  Info,
-  CheckCircle,
-} from 'lucide-react';
+import { CreditCard, ShieldCheck, Sparkles, Info, CheckCircle } from 'lucide-react';
 import { useAppStore } from '../../app/store';
 import { formatCents } from '../../core/utils/currency';
 import { Button } from '../../components/ui/button';
@@ -68,7 +62,8 @@ export function WalletPage() {
             <span className="text-xs font-sans text-brand-primary font-bold">USD</span>
           </div>
           <p className="text-xs text-slate-400">
-            Account: <strong className="text-white">{currentUser.displayName}</strong> ({currentUser.email})
+            Account: <strong className="text-white">{currentUser.displayName}</strong> (
+            {currentUser.email})
           </p>
         </div>
 
@@ -99,8 +94,9 @@ export function WalletPage() {
             </Badge>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Per client specification, clicking this action displays <strong>"Pay by Visa or Mastercard"</strong>.
-            No actual payment gateway, credit card fields, or bank redirects are required or executed.
+            Per client specification, clicking this action displays{' '}
+            <strong>"Pay by Visa or Mastercard"</strong>. No actual payment gateway, credit card
+            fields, or bank redirects are required or executed.
           </p>
           <div className="pt-1 flex items-center justify-between text-xs">
             <span className="text-slate-400">Simulation Method: Visa / Mastercard Selector</span>
@@ -157,14 +153,17 @@ export function WalletPage() {
             <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-400 flex items-start gap-2.5">
               <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
               <span>
-                <strong>Client Requirement:</strong> The payment button only needs to display
-                "Pay by Visa or Mastercard". No actual payment gateway or card-data collection is required.
+                <strong>Client Requirement:</strong> The payment button only needs to display "Pay
+                by Visa or Mastercard". No actual payment gateway or card-data collection is
+                required.
               </span>
             </div>
 
             {/* Optional Demo Top-Up Testing for high-value orders */}
             <div className="pt-4 border-t border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs">
-              <span className="text-slate-400">Optional: Add simulated test credit to balance:</span>
+              <span className="text-slate-400">
+                Optional: Add simulated test credit to balance:
+              </span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"

@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import 'fake-indexeddb/auto';
 
 // Mock matchMedia for jsdom
 Object.defineProperty(window, 'matchMedia', {
@@ -14,3 +15,13 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: () => false,
   }),
 });
+
+// Mock ResizeObserver for Recharts in jsdom
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+window.ResizeObserver = ResizeObserverMock;
+global.ResizeObserver = ResizeObserverMock;
