@@ -1,0 +1,121 @@
+.order-launcher {
+  max-width: 1200px;
+  margin: auto;
+  color: var(--foreground);
+}
+.order-launcher > header {
+  margin: 10px 0 30px;
+}
+.order-launcher > header > span {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: var(--primary);
+}
+.order-launcher h1 {
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 14px 0;
+}
+.order-launcher > header p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.order-launcher-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.order-launcher-grid > a {
+  --launch: var(--gold-ink);
+  border: 1px solid var(--border);
+  border-radius: 25px;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse at 50% 0,
+      color-mix(in srgb, var(--launch) 11%, transparent),
+      transparent 65%
+    ),
+    var(--surface);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
+}
+.order-launcher-grid > .launcher-premium {
+  --launch: var(--violet-ink);
+}
+.order-launcher-grid > .launcher-growth {
+  --launch: var(--cyan-ink);
+}
+.order-launcher-grid > a:hover {
+  transform: translateY(-5px);
+  border-color: var(--launch);
+}
+.order-launcher-grid > a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+.order-launcher-grid img {
+  height: 210px;
+  width: 100%;
+  object-fit: contain;
+}
+.order-launcher-grid > a > span {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--launch);
+  margin-top: 20px;
+}
+.order-launcher-grid h2 {
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  margin: 10px 0;
+}
+.order-launcher-grid p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+.order-launcher-grid strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--launch);
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+.order-launcher-note {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 25px;
+}
+@media (max-width: 1000px) {
+  .order-launcher-grid {
+    grid-template-columns: 1fr;
+  }
+  .order-launcher-grid img {
+    height: 220px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .order-launcher-grid > a {
+    transition: none;
+  }
+  .order-launcher-grid > a:hover {
+    transform: none;
+  }
+}

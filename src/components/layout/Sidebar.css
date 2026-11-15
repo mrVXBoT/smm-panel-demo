@@ -1,0 +1,582 @@
+.dock-rail {
+  width: 252px;
+  flex: 0 0 252px;
+  padding: 20px 0 20px 16px;
+  transition:
+    width 0.25s,
+    flex-basis 0.25s;
+  position: relative;
+  align-self: stretch;
+  min-width: 0;
+}
+.nova-dock {
+  position: sticky;
+  top: 100px;
+  height: calc(100dvh - 120px);
+  max-height: 850px;
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 60%, transparent);
+  border-radius: 26px;
+  padding: 16px 11px 12px;
+  background:
+    linear-gradient(155deg, color-mix(in srgb, var(--accent) 4%, transparent), transparent 50%),
+    color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(24px) saturate(130%);
+  box-shadow:
+    0 10px 35px var(--card-shadow),
+    inset 0 1px 0 color-mix(in srgb, var(--foreground) 4%, transparent);
+  color: var(--foreground);
+  z-index: 40;
+}
+.dock-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 12px;
+}
+.dock-brand {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  white-space: nowrap;
+  min-width: 0;
+}
+.dock-brand .nova-brand-art {
+  width: 37px;
+  height: 37px;
+  flex-shrink: 0;
+  display: block;
+}
+.dock-brand svg {
+  width: 100%;
+  height: 100%;
+}
+.dock-brand > span:last-child {
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.045em;
+}
+.dock-brand > span:last-child > span {
+  font-weight: 450;
+  color: var(--muted);
+}
+.dock-collapse {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 10px;
+  color: var(--muted);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.dock-collapse:hover {
+  color: var(--primary);
+  background: var(--subtle-surface);
+}
+.dock-new-order {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #06b6d4, #6366f1);
+  color: white;
+  box-shadow: 0 5px 18px #06b6d419;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.dock-new-order > svg:last-child {
+  margin-inline-start: auto;
+  opacity: 0.7;
+}
+.dock-new-order:hover {
+  box-shadow: 0 6px 24px #06b6d435;
+}
+.dock-navigation {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+  flex: 1;
+  padding: 1px 0 10px;
+}
+.dock-navigation section + section {
+  margin-top: 20px;
+}
+.dock-navigation h2 {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  color: var(--dim);
+  padding: 0 12px;
+  margin: 5px 0 8px;
+  white-space: nowrap;
+}
+.dock-navigation ul {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.dock-link {
+  --dock-color: var(--primary);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  color: var(--muted);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+  font-size: 12px;
+  font-weight: 500;
+}
+.dock-link:hover {
+  background: var(--subtle-surface);
+  color: var(--foreground);
+}
+.dock-link-icon {
+  width: 23px;
+  height: 23px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.dock-utility-icon {
+  width: 17px;
+  height: 17px;
+  stroke-width: 1.6;
+}
+.dock-product-mark {
+  width: 23px;
+  height: 23px;
+  color: var(--dock-color);
+}
+.dock-stars {
+  --dock-color: var(--gold-ink);
+}
+.dock-premium {
+  --dock-color: var(--violet-ink);
+}
+.dock-growth {
+  --dock-color: var(--cyan-ink);
+}
+.dock-label {
+  white-space: nowrap;
+}
+.dock-product-dot {
+  height: 4px;
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--dock-color);
+  opacity: 0.4;
+  margin-inline-start: auto;
+}
+.dock-link.is-active {
+  color: var(--dock-color);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--dock-color) 13%, transparent),
+    color-mix(in srgb, var(--dock-color) 3%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--dock-color) 17%, transparent);
+  font-weight: 650;
+}
+.dock-link.is-active:before {
+  content: '';
+  position: absolute;
+  inset-inline-start: -1px;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 5px;
+  background: var(--dock-color);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--dock-color) 40%, transparent);
+  animation: dock-indicator 0.25s ease-out both;
+}
+.dock-link.is-active .dock-product-dot {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--dock-color);
+}
+.dock-account {
+  position: relative;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--field);
+}
+.dock-account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-align: start;
+  padding: 11px 9px;
+  width: 100%;
+  border-radius: 16px;
+  cursor: pointer;
+}
+.dock-avatar {
+  position: relative;
+  width: 32px;
+  height: 34px;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary) 20%, var(--surface)),
+    color-mix(in srgb, var(--accent) 20%, var(--surface))
+  );
+  border: 1px solid var(--border-strong);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 750;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.dock-avatar i {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--success);
+  bottom: -2px;
+  inset-inline-end: -2px;
+}
+.dock-account-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.dock-account-copy strong {
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dock-account-copy small {
+  font-size: 9px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dock-account-trigger > svg {
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.dock-account-trigger > svg.account-chevron-open {
+  transform: rotate(180deg);
+}
+.dock-account-popover {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: calc(100% + 10px);
+  width: 240px;
+  max-width: calc(100vw - 40px);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  box-shadow: 0 10px 35px var(--card-shadow);
+  border-radius: 18px;
+  padding: 16px;
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+}
+.dock-account-popover > span {
+  font-size: 8px;
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.dock-account-popover > strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  padding-bottom: 5px;
+}
+.dock-account-popover > a {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 11px;
+  padding: 10px 8px;
+  border-radius: 9px;
+  color: var(--muted);
+  background: var(--field);
+}
+.dock-account-popover > a:hover {
+  color: var(--primary);
+}
+.dock-demo-label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+  margin-top: 12px;
+  white-space: nowrap;
+}
+.dock-demo-label > span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.dock-mobile-close,
+.dock-backdrop {
+  display: none;
+}
+.nova-dock a:focus-visible,
+.nova-dock button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.dock-rail.is-collapsed {
+  width: 94px;
+  flex-basis: 94px;
+}
+.is-collapsed .nova-dock {
+  padding-inline: 9px;
+}
+.is-collapsed .dock-brand-row {
+  padding-inline: 0;
+  justify-content: center;
+}
+.is-collapsed .dock-brand > span:last-child,
+.is-collapsed .dock-label,
+.is-collapsed .dock-new-order > span,
+.is-collapsed .dock-new-order > svg:last-child,
+.is-collapsed .dock-collapse > span,
+.is-collapsed .dock-account-copy,
+.is-collapsed .dock-account-trigger > svg,
+.is-collapsed .dock-demo-label,
+.is-collapsed .dock-product-dot {
+  display: none;
+}
+.is-collapsed .dock-collapse,
+.is-collapsed .dock-new-order,
+.is-collapsed .dock-link,
+.is-collapsed .dock-account-trigger {
+  justify-content: center;
+  padding-inline: 0;
+}
+.is-collapsed .dock-collapse {
+  margin-bottom: 12px;
+}
+.is-collapsed .dock-navigation h2 {
+  font-size: 0;
+  height: 1px;
+  background: var(--border);
+  margin: 12px 10px;
+}
+.is-collapsed .dock-navigation section + section {
+  margin-top: 16px;
+}
+.is-collapsed .dock-account-trigger {
+  padding-block: 9px;
+}
+.is-collapsed .dock-account-popover {
+  inset-inline-start: calc(100% + 12px);
+  bottom: 0;
+}
+.is-collapsed .dock-new-order {
+  height: 44px;
+}
+.is-collapsed .dock-new-order > svg:first-child {
+  display: block;
+}
+.is-collapsed .dock-new-order[aria-current='page'] {
+  outline: 1px solid var(--primary);
+  outline-offset: 3px;
+}
+@keyframes dock-indicator {
+  from {
+    opacity: 0;
+    transform: scaleY(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+@media (max-width: 1023px) {
+  .dock-rail,
+  .dock-rail.is-collapsed {
+    width: 0;
+    flex-basis: 0;
+    padding: 0;
+    position: static;
+  }
+  .nova-dock,
+  .is-collapsed .nova-dock {
+    position: fixed;
+    inset-block: 12px;
+    inset-inline-start: 12px;
+    width: min(286px, calc(100vw - 36px));
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    padding: 17px 13px;
+    z-index: 80;
+    transform: translateX(-115%);
+    visibility: hidden;
+    transition:
+      transform 0.25s,
+      visibility 0.25s;
+  }
+  .is-open .nova-dock {
+    transform: translateX(0);
+    visibility: visible;
+  }
+  .dock-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    background: #02061780;
+    backdrop-filter: blur(5px);
+    cursor: default;
+  }
+  .dock-mobile-close {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    color: var(--muted);
+    background: var(--subtle-surface);
+    cursor: pointer;
+  }
+  .dock-collapse,
+  .is-collapsed .dock-collapse {
+    display: none;
+  }
+  .is-collapsed .dock-brand-row {
+    padding: 0 6px 12px;
+    justify-content: space-between;
+  }
+  .is-collapsed .dock-brand > span:last-child,
+  .is-collapsed .dock-label,
+  .is-collapsed .dock-new-order > span,
+  .is-collapsed .dock-account-copy {
+    display: block;
+  }
+  .is-collapsed .dock-new-order > svg:last-child,
+  .is-collapsed .dock-account-trigger > svg,
+  .is-collapsed .dock-product-dot,
+  .is-collapsed .dock-demo-label {
+    display: flex;
+  }
+  .is-collapsed .dock-new-order,
+  .is-collapsed .dock-link {
+    justify-content: initial;
+    padding: 8px 12px;
+    height: auto;
+  }
+  .dock-new-order,
+  .is-collapsed .dock-new-order {
+    margin-top: 8px;
+    padding: 13px 12px;
+  }
+  .is-collapsed .dock-navigation h2 {
+    font-size: 8px;
+    height: auto;
+    background: none;
+    margin: 5px 0 8px;
+  }
+  .is-collapsed .dock-account-trigger {
+    justify-content: initial;
+    padding: 11px 9px;
+  }
+  .is-collapsed .dock-account-popover {
+    inset-inline-start: 0;
+    bottom: calc(100% + 10px);
+  }
+  .dock-navigation section + section,
+  .is-collapsed .dock-navigation section + section {
+    margin-top: 20px;
+  }
+  [dir='rtl'] .nova-dock {
+    transform: translateX(115%);
+  }
+  [dir='rtl'] .is-open .nova-dock {
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock-rail,
+  .nova-dock,
+  .dock-link,
+  .dock-account-trigger > svg {
+    transition: none;
+  }
+  .dock-link.is-active:before {
+    animation: none;
+  }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .nova-dock {
+    padding-block: 12px 10px;
+  }
+  .dock-brand-row {
+    padding-bottom: 6px;
+  }
+  .dock-collapse {
+    padding-block: 6px;
+    margin-bottom: 6px;
+  }
+  .dock-new-order {
+    padding-block: 10px;
+    margin-bottom: 10px;
+  }
+  .dock-navigation section + section {
+    margin-top: 12px;
+  }
+  .dock-navigation h2 {
+    margin-block: 3px 5px;
+  }
+  .dock-navigation ul {
+    gap: 2px;
+  }
+  .dock-link {
+    min-height: 36px;
+    padding-block: 5px;
+  }
+  .dock-account {
+    margin-top: 4px;
+  }
+  .dock-account-trigger {
+    padding-block: 8px;
+  }
+  .dock-demo-label {
+    margin-top: 9px;
+  }
+}
+.dock-account-glyph {
+  width: 23px;
+  height: 23px;
+  color: var(--dock-color);
+}
+.dock-link-icon > .account-glyph,
+.dock-account-popover .account-glyph {
+  width: 23px;
+  height: 23px;
+  color: var(--primary);
+}
